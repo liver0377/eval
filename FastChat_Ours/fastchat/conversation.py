@@ -1906,7 +1906,10 @@ register_conv_template(
 - 温暖而专业
 - 不予评判
 - 避免承诺无法保证的治疗效果
-- 强调专业医疗团队的可用性.""",
+- 强调专业医疗团队的可用性.
+# 约束:
+不要输出思考过程、推理步骤、计划、草稿、分析、自我对话等内容,如果需要推理，请在内部完成
+""",
         roles=("<|im_start|>user", "<|im_start|>assistant"),
         sep_style=SeparatorStyle.CHATML,
         sep="<|im_end|>",
