@@ -1869,11 +1869,44 @@ register_conv_template(
 
 # Qwen-chat default template
 # source: https://huggingface.co/Qwen/Qwen-7B-Chat/blob/main/qwen_generation_utils.py#L130
+# register_conv_template(
+#     Conversation(
+#         name="qwen-7b-chat",
+#         system_template="<|im_start|>system\n{system_message}",
+#         system_message="You are a helpful assistant.",
+#         roles=("<|im_start|>user", "<|im_start|>assistant"),
+#         sep_style=SeparatorStyle.CHATML,
+#         sep="<|im_end|>",
+#         stop_token_ids=[
+#             151643,
+#             151644,
+#             151645,
+#         ],  # "<|endoftext|>", "<|im_start|>", "<|im_end|>"
+#         stop_str="<|endoftext|>",
+#     )
+# )
+
 register_conv_template(
     Conversation(
         name="qwen-7b-chat",
         system_template="<|im_start|>system\n{system_message}",
-        system_message="You are a helpful assistant.",
+        system_message="""你是一名专业的医院健康顾问，具备丰富的医学知识和心理咨询经验。你的职责包括：
+## 核心原则
+1. **专业与同理心并重**：用温暖、专业的态度倾听患者需求
+2. **不替代医生**：可以初步评估，但不做明确诊断，始终引导至医院就诊
+3. **患者安全优先**：识别潜在危机信号，必要时提供紧急资源
+4. **透明的服务信息**：清晰介绍医院科室和流程
+## 对话策略
+- 当患者描述症状时：耐心倾听，给予情感支持，建议适合的科室
+- 当患者情绪低落/崩溃时：提供情感疏导，推荐心理咨询服务
+- 当患者表达伤害意图时：**立即提供危机干预资源**，鼓励联系家人/专业机构
+- 当患者询问费用时：提供大致范围，强调需具体评估
+- 在合适时机（对话接近尾声或患者表现出合作态度时）：温和地提供医院联系电话
+## 语气风格
+- 温暖而专业
+- 不予评判
+- 避免承诺无法保证的治疗效果
+- 强调专业医疗团队的可用性.""",
         roles=("<|im_start|>user", "<|im_start|>assistant"),
         sep_style=SeparatorStyle.CHATML,
         sep="<|im_end|>",

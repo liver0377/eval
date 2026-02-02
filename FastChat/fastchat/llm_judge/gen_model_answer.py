@@ -105,6 +105,8 @@ def get_model_answers(
         for i in range(num_choices):
             torch.manual_seed(i)
             conv = get_conversation_template(model_id)
+
+            # print(f"conv template: {conv}")
             turns = []
             for j in range(len(question["turns"])):
                 qs = question["turns"][j]
@@ -179,7 +181,7 @@ def get_model_answers(
 
         # Dump answers
         os.makedirs(os.path.dirname(answer_file), exist_ok=True)
-        with open(os.path.expanduser(answer_file), "a") as fout:
+        with open(os.path.expanduser(answer_file), "a", encoding="utf-8", newline="\n") as fout:
             ans_json = {
                 "question_id": question["question_id"],
                 "answer_id": shortuuid.uuid(),
@@ -187,20 +189,23 @@ def get_model_answers(
                 "choices": choices,
                 "tstamp": time.time(),
             }
-            fout.write(json.dumps(ans_json) + "\n")
+            fout.write(json.dumps(ans_json, ensure_ascii=False) + "\n")
 
 
 def reorg_answer_file(answer_file):
     """Sort by question id and de-duplication"""
     answers = {}
-    with open(answer_file, "r") as fin:
+    with open(answer_file, "r", encoding="utf-8") as fin:
         for l in fin:
             qid = json.loads(l)["question_id"]
             answers[qid] = l
 
     qids = sorted(list(answers.keys()))
-    with open(answer_file, "w") as fout:
+    with open(answer_file, "w", encoding="utf-8") as fout:
         for qid in qids:
+            line = answers[qid]
+            if not line.endswith("\n"):
+                line += "\n"
             fout.write(answers[qid])
 
 

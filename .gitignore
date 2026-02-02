@@ -3,3 +3,5 @@ Qwen3-8B
 .pyc
 __pycache__/
 sales_repo
+models
+repo.bundle
