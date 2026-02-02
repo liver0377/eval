@@ -7,6 +7,7 @@ import argparse
 import json
 import os
 import random
+import re
 import time
 
 import shortuuid
@@ -16,6 +17,77 @@ from tqdm import tqdm
 from fastchat.llm_judge.common import load_questions, temperature_config
 from fastchat.model import load_model, get_conversation_template
 from fastchat.utils import str_to_torch_dtype
+
+
+def remove_thinking_content(text: str, model_id: str = "") -> str:
+    """
+    Smartly remove thinking content based on model type and output patterns.
+    
+    Args:
+        text: Model output text
+        model_id: Model identifier (e.g., "Qwen3-8B")
+    
+    Returns:
+        Cleaned text with thinking process removed if detected
+    """
+    if not text:
+        return text
+
+    # Strategy 1: For Qwen models with known thinking patterns
+    if 'qwen' in model_id.lower():
+        return _remove_qwen_thinking(text)
+    
+    # Strategy 2: For other models (including SFT models), use conservative approach
+    return _remove_generic_thinking(text)
+
+
+def _remove_qwen_thinking(text: str) -> str:
+    """
+    Aggressive removal for Qwen models with known thinking behavior.
+    Qwen models typically output: [thinking process]\n\n\n[actual answer]
+    """
+    if '\n\n\n' in text:
+        parts = text.split('\n\n\n')
+        # For Qwen, extract everything after first separator
+        # This is safe because we know Qwen outputs thinking first
+        if len(parts) > 1:
+            answer = '\n\n\n'.join(parts[1:])
+            # Only return if answer has content
+            if answer.strip():
+                return answer.strip()
+    
+    return text
+
+
+def _remove_generic_thinking(text: str) -> str:
+    """
+    Conservative removal for generic models (including SFT models).
+    Only removes if there's a clear separator AND thinking indicators.
+    """
+    if '\n\n\n' in text:
+        parts = text.split('\n\n\n')
+        if len(parts) >= 2:
+            first_part = parts[0].strip()
+            
+            # Check if first part shows thinking patterns
+            thinking_indicators = [
+                '好的，用户', '让我', '我需要', '首先，',
+                'Let me', 'I need to', 'First, let me', 'Based on'
+            ]
+            
+            # Only extract if first part is clearly thinking AND relatively short
+            if any(indicator in first_part for indicator in thinking_indicators):
+                if len(first_part) < 800:
+                    # First part is likely thinking process, extract rest
+                    answer = '\n\n\n'.join(parts[1:])
+                    if answer.strip():
+                        return answer.strip()
+            
+            # Otherwise, keep original (might be legitimate answer)
+            return text
+    
+    # No separator or uncertain, keep original
+    return text
 
 
 def run_eval(
@@ -167,6 +239,9 @@ def get_model_answers(
                         else:
                             output = output.replace(special_token, "")
                     output = output.strip()
+
+                    # Remove thinking/reasoning content from the output
+                    output = remove_thinking_content(output, model_id)
 
                     if conv.name == "xgen" and output.startswith("Assistant:"):
                         output = output.replace("Assistant:", "", 1).strip()
