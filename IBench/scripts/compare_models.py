@@ -14,6 +14,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from IBench.models.local_model import LocalModel
 from IBench.models.model_configs import get_model_config
 from IBench.models.api_model import APIModel
+from IBench.conversation.user_simulator import UserSimulator
 from IBench.evaluator.batch_evaluator import BatchEvaluator
 from IBench.utils.common import Message, EvaluationMode
 from IBench.config import Config
@@ -27,7 +28,7 @@ def load_model_from_config(model_config, api_key: str):
         api_key: API key for judge model
         
     Returns:
-        Tuple of (local_model, judge_model)
+        Tuple of (local_model, judge_model, user_simulator)
     """
     # Create ModelConfig for LocalModel
     from IBench.config import ModelConfig as IBenchModelConfig
@@ -53,7 +54,11 @@ def load_model_from_config(model_config, api_key: str):
         model_name=ibench_config.judge_model_name
     )
     
-    return local_model, judge_model
+    # Create UserSimulator
+    user_simulator = UserSimulator(ibench_config)
+    print("UserSimulator initialized")
+    
+    return local_model, judge_model, user_simulator
 
 def compare_models(
     model_names: List[str],
@@ -92,7 +97,7 @@ def compare_models(
         try:
             # Load model
             model_config = get_model_config(model_name)
-            local_model, judge_model = load_model_from_config(model_config, api_key)
+            local_model, judge_model, user_simulator = load_model_from_config(model_config, api_key)
             
             # Create evaluator
             config = Config()
@@ -105,28 +110,39 @@ def compare_models(
             for i, prompt in enumerate(test_prompts):
                 print(f"\nTest {i+1}/{len(test_prompts)}: {prompt[:50]}...")
                 
-                # Simulate conversation
-                conversation_history = [Message(role="user", content=prompt, turn_id=1)]
+                # Interactive conversation using UserSimulator
+                conversation_history = []
                 responses = []
                 
-                # Generate responses for each turn
-                current_history = conversation_history.copy()
-                for turn in range(max_turns):
-                    response = local_model.generate(current_history)
-                    responses.append(response)
-                    current_history.append(
-                        Message(role="assistant", content=response, turn_id=turn+1)
-                    )
-                    if turn < max_turns - 1:
-                        # Simple follow-up
-                        current_history.append(
-                            Message(role="user", content="请继续", turn_id=turn+2)
-                        )
+                # First user message
+                user_msg = Message(role="user", content=prompt, turn_id=1)
+                conversation_history.append(user_msg)
                 
-                # Evaluate
+                # Interactive loop
+                for turn in range(1, max_turns + 1):
+                    print(f"  Turn {turn}...")
+                    
+                    # Generate assistant response
+                    assistant_response = local_model.generate(conversation_history)
+                    responses.append(assistant_response)
+                    
+                    assistant_msg = Message(
+                        role="assistant",
+                        content=assistant_response,
+                        turn_id=turn
+                    )
+                    conversation_history.append(assistant_msg)
+                    
+                    # Generate next user message using UserSimulator (except after last turn)
+                    if turn < max_turns:
+                        user_msg = user_simulator.generate_user_message(conversation_history)
+                        print(f"    User: {user_msg.content[:50]}...")
+                        conversation_history.append(user_msg)
+                
+                # Evaluate using INTERACTIVE mode
                 result = evaluator.evaluate_conversation(
                     conversation_id=f"{model_name}_test_{i+1}",
-                    mode=EvaluationMode.CONTEXT,
+                    mode=EvaluationMode.INTERACTIVE,
                     conversation_history=conversation_history,
                     responses=responses
                 )
