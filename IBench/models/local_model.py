@@ -197,8 +197,20 @@ class LocalModel:
             padding=False
         )
         
-        # Move inputs to correct device
-        if self.device == "cuda" and not (self.config.load_in_4bit or self.config.load_in_8bit):
+        # Move inputs to correct device - smart device mapping (方案A)
+        if self.config.load_in_4bit or self.config.load_in_8bit:
+            # 对于量化模型（device_map="auto"），获取模型实际设备
+            try:
+                # 获取模型第一个参数的设备
+                device = next(self.model.parameters()).device
+                # 只移动 Tensor 类型的输入
+                inputs = {k: v.to(device) if isinstance(v, torch.Tensor) else v 
+                         for k, v in inputs.items()}
+            except StopIteration:
+                # 模型没有参数（极少见情况），保持默认
+                pass
+        elif self.device == "cuda":
+            # 对于非量化模型，移到指定设备
             inputs = {k: v.to(self.device) for k, v in inputs.items()}
         
         # Generate
