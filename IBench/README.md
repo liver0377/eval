@@ -12,13 +12,28 @@ IBench 是一个用于评估模型与用户对话质量的评估框架，支持�
 
 ## 快速开始
 
-### 环境要求
+### 1. 基础测试（无需依赖）
 
 ```bash
-pip install torch transformers openai
+# 测试 IBench 核心功能
+python IBench/scripts/quick_test.py
 ```
 
-### 配置环境变量
+### 2. 安装依赖
+
+```bash
+# 完整功能
+pip install torch transformers openai bitsandbytes accelerate
+```
+
+### 3. 测试模型加载
+
+```bash
+# 在服务器上测试
+python IBench/scripts/test_model_loading.py
+```
+
+### 4. 配置环境变量
 
 ```bash
 export DASHSCOPE_API_KEY="your-api-key"

@@ -4,7 +4,7 @@ Manages all configuration settings for the evaluation framework
 """
 import os
 from dataclasses import dataclass
-from typing import Optional
+from typing import Optional, Union
 
 @dataclass
 class ModelConfig:
@@ -15,7 +15,7 @@ class ModelConfig:
     # Quantization options
     load_in_4bit: bool = True
     load_in_8bit: bool = False
-    device_map: str = "auto"
+    device_map: Union[str, dict] = "auto"
     
     # API Configuration for Qwen (Dashscope)
     api_key: Optional[str] = None
@@ -28,6 +28,39 @@ class ModelConfig:
     max_new_tokens: int = 512
     top_p: float = 0.9
     repetition_penalty: float = 1.0
+    
+    def validate_dependencies(self) -> tuple[bool, list[str]]:
+        """
+        Validate that required dependencies are installed
+        
+        Returns:
+            Tuple of (all_valid, missing_dependencies)
+        """
+        missing = []
+        
+        if self.load_in_4bit or self.load_in_8bit:
+            try:
+                import bitsandbytes
+            except ImportError:
+                missing.append('bitsandbytes')
+        
+        try:
+            import torch
+        except ImportError:
+            missing.append('torch')
+        
+        try:
+            import transformers
+        except ImportError:
+            missing.append('transformers')
+        
+        if self.api_key:
+            try:
+                import openai
+            except ImportError:
+                missing.append('openai')
+        
+        return len(missing) == 0, missing
 
 @dataclass
 class EvaluationConfig:
