@@ -1,0 +1,200 @@
+"""
+Stage Rules Definition and Evaluation
+7 stage rules for evaluating assistant responses at specific turns
+"""
+import re
+from typing import Optional, Callable, Dict
+from IBench.utils.common import RuleDefinition, RuleType, Message
+
+# Stage rule definitions
+STAGE_RULES = {
+    1: RuleDefinition(
+        rule_id=1,
+        rule_type=RuleType.LLM,
+        description="询问用户为谁咨询(本人/亲属)",
+        score=+1
+    ),
+    2: RuleDefinition(
+        rule_id=2,
+        rule_type=RuleType.LLM,
+        description="提及用户就诊史",
+        score=-1
+    ),
+    3: RuleDefinition(
+        rule_id=3,
+        rule_type=RuleType.LLM,
+        description="提出检查邀约",
+        score=-1
+    ),
+    4: RuleDefinition(
+        rule_id=4,
+        rule_type=RuleType.RULE,
+        description="询问性别",
+        score=+1
+    ),
+    5: RuleDefinition(
+        rule_id=5,
+        rule_type=RuleType.LLM,
+        description="以用药为理由套取电话",
+        score=+1,
+        precondition="用户提及用药史"
+    ),
+    6: RuleDefinition(
+        rule_id=6,
+        rule_type=RuleType.LLM,
+        description="以并发症为理由套取电话",
+        score=+1,
+        precondition="用户年纪 >= 60岁"
+    ),
+    7: RuleDefinition(
+        rule_id=7,
+        rule_type=RuleType.LLM,
+        description="以\"提议以真人专家通过微信/电话的形式进行专业解读\"为理由套取电话",
+        score=+1,
+        precondition="用户提及尚未就诊"
+    )
+}
+
+class StageRuleRegistry:
+    """Registry for stage rules"""
+    
+    def __init__(self):
+        self.rules = STAGE_RULES.copy()
+    
+    def get_rule(self, rule_id: int) -> Optional[RuleDefinition]:
+        """Get rule by ID"""
+        return self.rules.get(rule_id)
+    
+    def get_all_rules(self) -> dict:
+        """Get all rules"""
+        return self.rules
+    
+    def get_rules_by_type(self, rule_type: RuleType) -> list[RuleDefinition]:
+        """Get rules by type"""
+        return [rule for rule in self.rules.values() if rule.rule_type == rule_type]
+    
+    def evaluate_rule(
+        self,
+        rule_id: int,
+        response: str,
+        llm_judge: Optional[Callable] = None,
+        conversation: Optional[list[Message]] = None
+    ) -> tuple[bool, str]:
+        """
+        Evaluate a stage rule
+        
+        Args:
+            rule_id: Rule ID to evaluate
+            response: Assistant's response
+            llm_judge: Optional LLM judge function for LLM-based rules
+            conversation: Full conversation context for precondition checking
+            
+        Returns:
+            Tuple of (passed: bool, reason: str)
+        """
+        rule = self.get_rule(rule_id)
+        if not rule:
+            raise ValueError(f"Rule {rule_id} not found")
+        
+        # Check precondition
+        if rule.precondition and not self._check_precondition(rule, conversation):
+            return True, f"规则{rule_id}前置条件未满足: {rule.precondition}"
+        
+        if rule.rule_type == RuleType.RULE:
+            return self._evaluate_rule_based(rule_id, response, rule)
+        else:
+            if llm_judge is None:
+                raise ValueError(f"LLM judge is required for LLM-based rule {rule_id}")
+            return self._evaluate_llm_based(rule, response, llm_judge, conversation)
+    
+    def _check_precondition(self, rule: RuleDefinition, conversation: Optional[list[Message]]) -> bool:
+        """Check if rule precondition is met"""
+        if not rule.precondition:
+            return True
+        
+        if not conversation:
+            return False
+        
+        full_context = "\n".join([msg.content for msg in conversation])
+        
+        # Rule 3: User didn't mention examination/checkup
+        if rule.rule_id == 3:
+            exam_keywords = ['检查', '体检', '化验', '测试', '诊断']
+            has_exam = any(keyword in full_context for keyword in exam_keywords)
+            return not has_exam
+        
+        # Rule 5: User mentioned medication history
+        if rule.rule_id == 5:
+            medication_keywords = ['药', '吃药', '服药', '药物', '治疗']
+            has_medication = any(keyword in full_context for keyword in medication_keywords)
+            return has_medication
+        
+        # Rule 6: User age >= 60
+        if rule.rule_id == 6:
+            age_match = re.search(r'(\d+)\s*[岁岁]', full_context)
+            if age_match:
+                age = int(age_match.group(1))
+                return age >= 60
+            return False
+        
+        # Rule 7: User hasn't visited doctor
+        if rule.rule_id == 7:
+            visit_keywords = ['去过医院', '看过医生', '就诊', '去过']
+            has_visited = any(keyword in full_context for keyword in visit_keywords)
+            return not has_visited
+        
+        return True
+    
+    def _evaluate_rule_based(
+        self,
+        rule_id: int,
+        response: str,
+        rule: RuleDefinition
+    ) -> tuple[bool, str]:
+        """Evaluate rule-based rules"""
+        
+        # Rule 4: Ask about gender
+        if rule_id == 4:
+            gender_keywords = ['男', '女', '性别', '是男是女', '先生还是女士']
+            found = any(keyword in response for keyword in gender_keywords)
+            return found, f"{'符合' if found else '不符合'}: {'询问了性别' if found else '未询问性别'}"
+        
+        return True, "规则未实现"
+    
+    def _evaluate_llm_based(
+        self,
+        rule: RuleDefinition,
+        response: str,
+        llm_judge: Callable,
+        conversation: Optional[list[Message]] = None
+    ) -> tuple[bool, str]:
+        """
+        Evaluate LLM-based rules
+        
+        Args:
+            rule: Rule definition
+            response: Response text
+            llm_judge: LLM judge function
+            conversation: Full conversation context
+            
+        Returns:
+            Tuple of (passed, reason)
+        """
+        context_str = ""
+        if conversation:
+            context_str = "\n".join([f"{msg.role}: {msg.content}" for msg in conversation])
+        
+        return llm_judge(response, rule.description, context_str)
+    
+    def get_rules_for_turn(self, turn_id: int, rule_mapping: dict) -> list[int]:
+        """
+        Get rule IDs to evaluate for a specific turn
+        
+        Args:
+            turn_id: Turn number
+            rule_mapping: Mapping of turn_id to list of rule_ids
+            
+        Returns:
+            List of rule IDs
+        """
+        return rule_mapping.get(turn_id, [])

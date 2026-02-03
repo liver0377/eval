@@ -1,0 +1,9 @@
+# IBench Requirements
+
+# Core dependencies
+torch>=2.0.0
+transformers>=4.30.0
+openai>=1.0.0
+
+# Optional dependencies for development
+python-dotenv>=1.0.0
