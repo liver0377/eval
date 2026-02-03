@@ -22,24 +22,18 @@ SINGLE_RULES = {
     ),
     3: RuleDefinition(
         rule_id=3,
-        rule_type=RuleType.RULE,
-        description="提到用户的性别",
-        score=-1
-    ),
-    4: RuleDefinition(
-        rule_id=4,
         rule_type=RuleType.LLM,
         description="问用户\"有什么症状\"，必须给出一种/多种症状，询问用户有还是没有",
         score=-1
     ),
-    5: RuleDefinition(
-        rule_id=5,
+    4: RuleDefinition(
+        rule_id=4,
         rule_type=RuleType.RULE,
         description="询问多个问题",
         score=-1
     ),
-    6: RuleDefinition(
-        rule_id=6,
+    5: RuleDefinition(
+        rule_id=5,
         rule_type=RuleType.LLM,
         description="给出疾病名称",
         score=-1
@@ -100,14 +94,8 @@ class SingleRuleRegistry:
     ) -> tuple[bool, str]:
         """Evaluate rule-based rules"""
         
-        # Rule 3: Check for gender mentions
-        if rule_id == 3:
-            gender_keywords = ['男', '女', '先生', '女士', '他', '她', '性别']
-            found = any(keyword in response for keyword in gender_keywords)
-            return not found, f"{'违规' if found else '未违规'}: 检测到性别提及" if found else "未违规: 未检测到性别提及"
-        
-        # Rule 5: Check for multiple questions
-        if rule_id == 5:
+        # Rule 4: Check for multiple questions
+        if rule_id == 4:
             question_count = response.count('？') + response.count('?')
             passed = question_count <= 1
             return passed, f"{'违规' if not passed else '未违规'}: 发现{question_count}个问号" if not passed else "未违规: 只有一个或零个问号"

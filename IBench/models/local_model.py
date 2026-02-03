@@ -248,3 +248,90 @@ class LocalModel:
             response = self.generate(messages)
             responses.append(response)
         return responses
+    
+    def check_precondition(
+        self,
+        conversation_context: str,
+        precondition_description: str
+    ) -> bool:
+        """
+        使用本地模型判断前置条件是否满足
+        
+        Args:
+            conversation_context: 对话上下文（格式化后的字符串）
+            precondition_description: 前置条件描述
+            
+        Returns:
+            bool: 是否满足前置条件
+        """
+        if self.model is None or self.tokenizer is None:
+            raise RuntimeError("Model not loaded")
+        
+        system_prompt = """你是一个客观公正的评估者。请根据对话上下文判断前置条件是否满足。
+
+请仔细阅读对话内容，判断是否符合给定的前置条件。
+- 如果满足前置条件，返回 "SATISFIED"
+- 如果不满足前置条件，返回 "NOT_SATISFIED"
+- 只返回上述两个选项之一，不要返回其他内容。"""
+        
+        user_prompt = f"""前置条件: {precondition_description}
+
+对话上下文:
+{conversation_context}
+
+判断:"""
+        
+        try:
+            # 使用 Qwen 的 chat template
+            messages = [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt}
+            ]
+            
+            # Format with chat template if available
+            if hasattr(self.tokenizer, 'apply_chat_template'):
+                prompt = self.tokenizer.apply_chat_template(
+                    messages,
+                    tokenize=False,
+                    add_generation_prompt=True
+                )
+            else:
+                prompt = f"System: {system_prompt}\nUser: {user_prompt}\nAssistant:"
+            
+            inputs = self.tokenizer(
+                prompt,
+                return_tensors="pt",
+                truncation=True,
+                max_length=4096,
+                padding=False
+            )
+            
+            # Move to device
+            if self.config.load_in_4bit or self.config.load_in_8bit:
+                device = next(self.model.parameters()).device
+                inputs = {k: v.to(device) if isinstance(v, torch.Tensor) else v 
+                         for k, v in inputs.items()}
+            elif self.device == "cuda":
+                inputs = {k: v.to(self.device) for k, v in inputs.items()}
+            
+            # Generate
+            with torch.no_grad():
+                outputs = self.model.generate(
+                    **inputs,
+                    max_new_tokens=10,
+                    temperature=0.0,
+                    do_sample=False,
+                    pad_token_id=self.tokenizer.pad_token_id or self.tokenizer.eos_token_id,
+                    eos_token_id=self.tokenizer.eos_token_id
+                )
+            
+            # Decode result
+            input_length = inputs['input_ids'].shape[1]
+            generated_ids = outputs[0][input_length:]
+            result = self.tokenizer.decode(generated_ids, skip_special_tokens=True).strip()
+            
+            return "SATISFIED" in result
+            
+        except Exception as e:
+            print(f"Error in precondition check: {e}")
+            return False

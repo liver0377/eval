@@ -137,3 +137,50 @@ class APIModel:
         except Exception as e:
             print(f"Error in judge evaluation: {e}")
             return False, f"Evaluation error: {str(e)}"
+    
+    def check_precondition(
+        self,
+        conversation_context: str,
+        precondition_description: str
+    ) -> bool:
+        """
+        使用 LLM 判断前置条件是否满足
+        
+        Args:
+            conversation_context: 对话上下文（格式化后的字符串）
+            precondition_description: 前置条件描述（如"用户年纪 >= 60岁"）
+            
+        Returns:
+            bool: 是否满足前置条件
+        """
+        system_prompt = """你是一个客观公正的评估者。请根据对话上下文判断前置条件是否满足。
+
+请仔细阅读对话内容，判断是否符合给定的前置条件。
+- 如果满足前置条件，返回 "SATISFIED"
+- 如果不满足前置条件，返回 "NOT_SATISFIED"
+- 只返回上述两个选项之一，不要返回其他内容。"""
+        
+        user_prompt = f"""前置条件: {precondition_description}
+
+对话上下文:
+{conversation_context}
+
+判断:"""
+        
+        try:
+            response = self.client.chat.completions.create(
+                model=self.model_name,
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt}
+                ],
+                temperature=0.0,
+                max_tokens=10
+            )
+            
+            result = response.choices[0].message.content.strip()
+            return "SATISFIED" in result
+            
+        except Exception as e:
+            print(f"Error in precondition check: {e}")
+            return False

@@ -96,8 +96,8 @@ class StageRuleRegistry:
         if not rule:
             raise ValueError(f"Rule {rule_id} not found")
         
-        # Check precondition
-        if rule.precondition and not self._check_precondition(rule, conversation):
+        # Check precondition (传入 llm_judge 以支持 LLM 判断)
+        if rule.precondition and not self._check_precondition(rule, conversation, llm_judge):
             return True, f"规则{rule_id}前置条件未满足: {rule.precondition}"
         
         if rule.rule_type == RuleType.RULE:
@@ -107,14 +107,26 @@ class StageRuleRegistry:
                 raise ValueError(f"LLM judge is required for LLM-based rule {rule_id}")
             return self._evaluate_llm_based(rule, response, llm_judge, conversation)
     
-    def _check_precondition(self, rule: RuleDefinition, conversation: Optional[list[Message]]) -> bool:
-        """Check if rule precondition is met"""
+    def _check_precondition(self, rule: RuleDefinition, conversation: Optional[list[Message]], llm_judge=None) -> bool:
+        """
+        Check if rule precondition is met
+        优先使用 LLM 判断，失败时降级到关键词匹配
+        """
         if not rule.precondition:
             return True
         
         if not conversation:
             return False
         
+        # 尝试使用 LLM 判断
+        if llm_judge and hasattr(llm_judge, 'check_precondition'):
+            try:
+                context_str = "\n".join([f"{msg.role}: {msg.content}" for msg in conversation])
+                return llm_judge.check_precondition(context_str, rule.precondition)
+            except Exception as e:
+                print(f"LLM precondition check failed for rule {rule.rule_id}, falling back to keyword matching: {e}")
+        
+        # Fallback: 关键词匹配（保留原有逻辑）
         full_context = "\n".join([msg.content for msg in conversation])
         
         # Rule 3: User didn't mention examination/checkup
