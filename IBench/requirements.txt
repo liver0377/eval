@@ -5,5 +5,13 @@ torch>=2.0.0
 transformers>=4.30.0
 openai>=1.0.0
 
+# Quantization support (required for 4bit/8bit loading)
+bitsandbytes>=0.41.0
+accelerate>=0.20.0
+
+# Qwen3 dependencies
+scipy>=1.10.0
+sentencepiece>=0.1.99
+
 # Optional dependencies for development
 python-dotenv>=1.0.0

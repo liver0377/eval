@@ -12,6 +12,11 @@ class ModelConfig:
     local_model_path: str = "./models/qwen3-8b"
     local_model_name: str = "qwen3-8b"
     
+    # Quantization options
+    load_in_4bit: bool = True
+    load_in_8bit: bool = False
+    device_map: str = "auto"
+    
     # API Configuration for Qwen (Dashscope)
     api_key: Optional[str] = None
     api_base: str = "https://dashscope.aliyuncs.com/compatible-mode/v1"
@@ -22,6 +27,7 @@ class ModelConfig:
     temperature: float = 0.0
     max_new_tokens: int = 512
     top_p: float = 0.9
+    repetition_penalty: float = 1.0
 
 @dataclass
 class EvaluationConfig:
