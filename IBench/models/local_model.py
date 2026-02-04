@@ -4,6 +4,7 @@ Loads and manages local model inference using HuggingFace Transformers
 Supports safetensors format, quantization, and multi-GPU device mapping
 """
 import os
+import re
 import torch
 from typing import Optional, List, Dict, Any
 from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
@@ -21,6 +22,7 @@ class LocalModel:
             config: Model configuration
         """
         self.config = config
+        self.system_prompt = config.system_prompt
         self.model = None
         self.tokenizer = None
         self.device = self._get_device()
@@ -140,10 +142,20 @@ class LocalModel:
             print("4. Install bitsandbytes: pip install bitsandbytes")
             raise
     
+    @staticmethod
+    def _clean_response(response: str) -> str:
+        """
+        清理模型输出，去除思考内容
+        删除 <|file_separator|> 及其后的所有内容（直到\n\n）
+        """
+        pattern = r'<\|file_separator\|>.*?(?=\n\n|$)'
+        cleaned = re.sub(pattern, '', response, flags=re.DOTALL)
+        return cleaned.strip()
+    
     def _format_messages(self, messages: List[Message]) -> str:
         """
         Format messages to prompt string
-        Supports Qwen chat template
+        Supports Qwen chat template and system prompt
         
         Args:
             messages: List of message objects
@@ -151,11 +163,24 @@ class LocalModel:
         Returns:
             Formatted prompt string
         """
-        # Try to use tokenizer's chat template if available (Qwen3 supports this)
+        formatted_messages = []
+        
+        if self.system_prompt:
+            formatted_messages.append({
+                "role": "system",
+                "content": self.system_prompt
+            })
+        
+        for msg in messages:
+            formatted_messages.append({
+                "role": msg.role,
+                "content": msg.content
+            })
+        
         if hasattr(self.tokenizer, 'apply_chat_template'):
             try:
                 formatted = self.tokenizer.apply_chat_template(
-                    messages,
+                    formatted_messages,
                     tokenize=False,
                     add_generation_prompt=True
                 )
@@ -163,13 +188,14 @@ class LocalModel:
             except:
                 pass
         
-        # Fallback to simple format
         prompt = ""
-        for msg in messages:
-            if msg.role == "user":
-                prompt += f"用户: {msg.content}\n"
-            elif msg.role == "assistant":
-                prompt += f"助手: {msg.content}\n"
+        for msg in formatted_messages:
+            if msg["role"] == "system":
+                prompt += f"System: {msg['content']}\n"
+            elif msg["role"] == "user":
+                prompt += f"用户: {msg['content']}\n"
+            elif msg["role"] == "assistant":
+                prompt += f"助手: {msg['content']}\n"
         prompt += "助手:"
         return prompt
     
@@ -231,7 +257,7 @@ class LocalModel:
         generated_ids = outputs[0][input_length:]
         response = self.tokenizer.decode(generated_ids, skip_special_tokens=True)
         
-        return response.strip()
+        return self._clean_response(response)
     
     def generate_batch(self, message_batches: List[List[Message]]) -> List[str]:
         """
@@ -328,7 +354,9 @@ class LocalModel:
             # Decode result
             input_length = inputs['input_ids'].shape[1]
             generated_ids = outputs[0][input_length:]
-            result = self.tokenizer.decode(generated_ids, skip_special_tokens=True).strip()
+            result = self._clean_response(
+                self.tokenizer.decode(generated_ids, skip_special_tokens=True)
+            )
             
             return "SATISFIED" in result
             

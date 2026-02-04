@@ -24,8 +24,9 @@ class ModelConfig:
     judge_model_name: str = "qwen-max"
     
     # Generation parameters
+    system_prompt: Optional[str] = None
     temperature: float = 0.0
-    max_new_tokens: int = 512
+    max_new_tokens: int = 40
     top_p: float = 0.9
     repetition_penalty: float = 1.0
     
