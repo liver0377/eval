@@ -27,7 +27,7 @@ class LocalModel:
         self.tokenizer = None
         self.device = self._get_device()
         
-        print(f"Loading local model from {config.local_model_path}...")
+        print(f"Loading local model from {config.path}...")
         self._load_model()
     
     def _get_device(self) -> str:
@@ -90,7 +90,7 @@ class LocalModel:
             # Load tokenizer with Qwen3 compatibility
             print("Loading tokenizer...")
             self.tokenizer = AutoTokenizer.from_pretrained(
-                self.config.local_model_path,
+                self.config.path,
                 trust_remote_code=True,
                 use_fast=False,
                 padding_side="left"
@@ -118,12 +118,12 @@ class LocalModel:
                 model_kwargs["device_map"] = self.config.device_map or "auto"
             
             # Load model
-            print(f"Loading model from {self.config.local_model_path}...")
+            print(f"Loading model from {self.config.path}...")
             print(f"  Device map: {model_kwargs.get('device_map', 'default')}")
             print(f"  Low CPU memory usage: {model_kwargs['low_cpu_mem_usage']}")
             
             self.model = AutoModelForCausalLM.from_pretrained(
-                self.config.local_model_path,
+                self.config.path,
                 **model_kwargs
             )
             

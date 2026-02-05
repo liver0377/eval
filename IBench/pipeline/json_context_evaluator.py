@@ -64,7 +64,7 @@ class JsonContextEvaluator:
 
         # Override config if parameters provided
         if local_model_path:
-            self.config.model.local_model_path = local_model_path
+            self.config.model.path = local_model_path
         if api_key:
             self.config.model.api_key = api_key
 
