@@ -19,10 +19,18 @@ from IBench.config import Config
 def load_conversation_from_file(file_path: str) -> tuple[List[Message], str]:
     """
     Load conversation from ShareGPT format JSON file
-    
+
+    Expected JSON format:
+    [
+        {"from": "human", "value": "...", "turn_id": 1},
+        {"from": "gpt", "value": "...", "turn_id": 1},
+        {"from": "human", "value": "...", "turn_id": 2},
+        {"from": "gpt", "value": "...", "turn_id": 2}
+    ]
+
     Args:
         file_path: Path to conversation JSON file
-        
+
     Returns:
         Tuple of (conversation_messages, conversation_id)
     """
@@ -32,11 +40,15 @@ def load_conversation_from_file(file_path: str) -> tuple[List[Message], str]:
     messages = []
     for i, msg in enumerate(conversation_data):
         role = "user" if msg["from"] == "human" else "assistant"
+        
+        if "turn_id" not in msg:
+            raise ValueError(f"Message at index {i} missing required 'turn_id' field: {msg}")
+        
         messages.append(
             Message(
                 role=role,
                 content=msg["value"],
-                turn_id=(i // 2) + 1
+                turn_id=msg["turn_id"]
             )
         )
     

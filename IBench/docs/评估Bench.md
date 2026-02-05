@@ -37,13 +37,13 @@
 
 `score`表示触发约束时的得分
 
-| ID   | 约束                                                   | 前置条件 | score | 分类 | Tag                              |
-| ---- | ------------------------------------------------------ | -------- | ----- | ---- | -------------------------------- |
-| 1    | 使用感谢用语                                           |          | -1    | LLM  | `single_turn:sty:gratitude`      |
-| 2    | 使用解释性话句（如“这有助于…”“了解到”） \| hard        |          | -1    | LLM  | `single_turn:sty:explain_filler` |
-| 3    | 使用宽泛问诊语句 (如“有什么症状", 而不是"有...症状么”) |          | -1    | LLM  | `single_turn:med:forced_symptom` |
-| 4    | 一条消息问多个问题                                     |          | -1    | Rule | `single_turn:ask:multi_question` |
-| 5    | 直接给出疾病名称                                       |          | -1    | LLM  | `single_turn:med:diagnosis_name` |
+| 规则名         | 约束                                                   | 语义level | score | 分类 |
+| -------------- | ------------------------------------------------------ | --------- | ----- | ---- |
+| gratitude      | 使用感谢用语                                           | sty       | -1    | LLM  |
+| explain_filler | 使用解释性话句（如"这有助于…""了解到"） \| hard        | sty       | -1    | LLM  |
+| forced_symptom | 使用宽泛问诊语句 (如"有什么症状", 而不是"有...症状么") | med       | -1    | LLM  |
+| multi_question | 一条消息问多个问题                                     | ask       | -1    | Rule |
+| diagnosis_name | 直接给出疾病名称                                       | med       | -1    | LLM  |
 
 对于模型输出的每条回复，都要应用`single_turn`的规则检查
 
@@ -77,9 +77,9 @@
 | test_invite        | FIRST_N    | med        | 前**{N}**轮提出检查邀约**{phrase}**                          | 用户没提及检查相关**{pre_phrase}**   | -1    | LLM      |
 | gender             | FIRST_N    | demo       | 前**{N}**轮询问到用户的性别**{gender}**                      |                                      | +1    | Rule     |
 | medication_phone   | FIRST_N    | conv       | 前**{N}**轮以用药为理由**{phrase}**套取电话                  | 用户提及用药史{pre_phrase}           | +1    | LLM      |
-| complication_phone | FIRST_N    | conv       | 前**{N}**轮以并发症**{diease}**为理由套取电话                | 用户年龄 >= **{age}**岁              | +1    | LLM      |
+| complication_phone | FIRST_N    | conv       | 前**{N}**轮以并发症**{disease}**为理由套取电话                | 用户年龄 >= **{age}**岁              | +1    | LLM      |
 | expert_phone       | FIRST_N    | conv       | 前**{N}**轮以“提议以真人专家通过微信/电话的形式进行专业解读"为理由**{phrase}**套取电话 | 用户提及其尚未就诊**{pre_phrase}**   | +1    | LLM      |
-| primary_only       | FIRST_N    | scope      | 前**{N}**轮仅围绕主要病症**{main_diease}**给出回复           | 用户提及多种疾病**{pre_dieases}**    | +1    | LLM      |
+| primary_only       | FIRST_N    | scope      | 前**{N}**轮仅围绕主要病症**{main_disease}**给出回复           | 用户提及多种疾病**{pre_diseases}**    | +1    | LLM      |
 | prompt_question    | FIRST_N    | ask        | 前**{N}**轮给出引导， 如“您身体有什么不适么”                 | 用户未给明确问题                     | +1    | LLM      |
 | report_phone       | FIRST_N    | conv       | 前**{N}**轮结合报告给出病情建议**{phrase}**， 进而套取电话进行联系 | 用户已就诊且提及检查报告**{phrase}** | +1    | LLM      |
 | advice_phone       | FIRST_N    | conv       | 前**{N}**以“详细沟通进而给出用药建议”为理由**{phrase}**套取电话 | 用户正在服药并寻求建议               | +1    | LLM      |
@@ -103,27 +103,33 @@
     "messages": [
       {
         "role": "system",
-        "content": "你是一名身高管理咨询顾问，致力于为青少年及成人提供身高促进的科学方案。微信号：18512886285。语言风格：直接、简短、引导性强，以获取关键信息和转化为核心目标。\n\n对话流程与约束：\n1. 前三轮必须明确咨询者是本人还是孩子\n2. 前4轮必须询问用户的性别\n3. 不要使用感谢用户用语\n4. 不要使用解释性语句"
+        "content": "你是一名身高管理咨询顾问，致力于为青少年及成人提供身高促进的科学方案。微信号：18512886285。语言风格：直接、简短、引导性强，以获取关键信息和转化为核心目标。\n\n对话流程与约束：\n1. 前三轮必须明确咨询者是本人还是孩子\n2. 前4轮必须询问用户的性别\n3. 不要使用感谢用户用语\n4. 不要使用解释性语句",
+        "turn_id": 0
       },
       {
         "role": "user",
-        "content": "孩子太矮"
+        "content": "孩子太矮",
+        "turn_id": 1
       },
       {
         "role": "assistant",
-        "content": "这里是专业身高管理中心，请问您是为谁咨询的呢？是孩子本人还是其他家属？"
+        "content": "这里是专业身高管理中心，请问您是为谁咨询的呢？是孩子本人还是其他家属？",
+        "turn_id": 1
       },
       {
         "role": "user",
-        "content": "是我的孩子，5岁了"
+        "content": "是我的孩子，5岁了",
+        "turn_id": 2
       },
       {
         "role": "assistant",
-        "content": "请问孩子是男孩还是女孩？现在的身高是多少呢？"
+        "content": "请问孩子是男孩还是女孩？现在的身高是多少呢？",
+        "turn_id": 2
       },
       {
         "role": "user",
-        "content": "男孩，身高95cm"
+        "content": "男孩，身高95cm",
+        "turn_id": 3
       }
     ],
     "rule_list": [
@@ -155,42 +161,52 @@
       {
         "role": "user",
         "content": "孩子太矮",
+        "turn_id": 0
       },
       {
         "role": "assistant",
         "content": "您好，这里是专业身高管理中心，请问您是为谁咨询的呢？是孩子本人还是其他家属？",
+        "turn_id": 0
       },
       {
         "role": "user",
         "content": "是我的孩子，5岁了",
+        "turn_id": 1
       },
       {
         "role": "assistant",
         "content": "请问孩子是男孩还是女孩？现在的身高是多少呢？",
+        "turn_id": 1
       },
       {
         "role": "user",
         "content": "男孩，身高只有95cm",
+        "turn_id": 2
       },
       {
         "role": "assistant",
         "content": "感谢您的详细信息。为了更好地为您制定身高促进方案，建议您带孩子来我们医院做一个全面的生长发育评估，包括骨龄检查等。请问您之前有带孩子去过医院检查吗？",
+        "turn_id": 2
       },
       {
         "role": "user",
         "content": "没去过，不知道要去哪家医院",
+        "turn_id": 3
       },
       {
         "role": "assistant",
         "content": "没关系，我们的生长发育专家可以通过微信或电话为您详细解读孩子的身高情况，并给出专业的建议。您可以添加我们的微信18512886285，或者留下您的联系方式，我们的专家会尽快联系您。",
+        "turn_id": 3
       },
-    
+      {
         "role": "user",
         "content": "好的，我的电话是13812345678",
+        "turn_id": 4
       },
       {
         "role": "assistant",
         "content": "好的，已经记录了您的联系方式。我们的专家会在今天下午联系您，为您详细解答孩子身高发育的问题。感谢您的咨询！",
+        "turn_id": 4
       }
   ]
     ,
