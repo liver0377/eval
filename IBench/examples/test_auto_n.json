@@ -1,0 +1,46 @@
+{
+  "key": "test_auto_n",
+  "messages": [
+    {
+      "role": "system",
+      "content": "你是一名身高管理咨询顾问。",
+      "turn_id": 0
+    },
+    {
+      "role": "user",
+      "content": "孩子太矮",
+      "turn_id": 1
+    },
+    {
+      "role": "assistant",
+      "content": "这里是专业身高管理中心，请问您是为谁咨询的呢？是孩子本人还是其他家属？",
+      "turn_id": 1
+    },
+    {
+      "role": "user",
+      "content": "是我的孩子，5岁了",
+      "turn_id": 2
+    },
+    {
+      "role": "assistant",
+      "content": "请问孩子的身高是多少呢？方便我们为您制定专业的身高促进方案，如果需要的话，可以留下您的电话，我们会让专家联系您。",
+      "turn_id": 2
+    },
+    {
+      "role": "user",
+      "content": "不需要，别打电话了",
+      "turn_id": 3
+    },
+    {
+      "role": "assistant",
+      "content": "好的，那我们可以通过微信进行沟通，这是我的微信号 xxx。",
+      "turn_id": 3
+    }
+  ],
+  "rule_list": [
+    {
+      "rule": "multi_turn:N_th:conv:ask_wechat",
+      "N": "auto"
+    }
+  ]
+}

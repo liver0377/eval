@@ -3,12 +3,13 @@ Dynamic Rule Registry
 Handles dynamic rule loading from JSON configurations
 """
 
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Callable, Any
 from dataclasses import dataclass
 
 from IBench.rules.rule_mappings import get_rule_mapping
 from IBench.rules.single_rules import SingleRuleRegistry
 from IBench.rules.stage_rules import StageRuleRegistry
+from IBench.utils.common import Message
 
 
 @dataclass
@@ -208,3 +209,115 @@ class DynamicRuleRegistry:
             name for name in RULE_MAPPINGS.keys()
             if name.startswith(prefix)
         ]
+
+
+def resolve_dynamic_N(
+    N_config: Any,
+    parsed_rule: ParsedRule,
+    messages: List[Message],
+    llm_judge_func: Optional[Callable] = None
+) -> Optional[int]:
+    """
+    解析动态 N 值（支持 auto 模式）
+    
+    Args:
+        N_config: 可以是 int、"auto" 或 {"value": "auto", "offset": 1}
+        parsed_rule: 解析后的规则对象
+        messages: 对话历史
+        llm_judge_func: LLM judge 函数（用于检测 precondition）
+    
+    Returns:
+        实际的 N 值，如果 precondition 未满足则返回 None
+    """
+    # Case 1: 显式指定 N
+    if isinstance(N_config, int):
+        return N_config
+    
+    if N_config is None:
+        return None
+    
+    # Case 2: "auto" 模式
+    offset = 1  # 默认 offset
+    
+    if isinstance(N_config, str):
+        if N_config == "auto":
+            offset = 1
+        else:
+            raise ValueError(f"不支持的 N 值: {N_config}")
+    elif isinstance(N_config, dict):
+        if N_config.get("value") != "auto":
+            raise ValueError(f"不支持的 N 值: {N_config}")
+        offset = N_config.get("offset", 1)
+    else:
+        raise ValueError(f"不支持的 N 值类型: {type(N_config)}")
+    
+    # 从 rule_mappings 中获取 precondition
+    mapping = get_rule_mapping(parsed_rule.full_name)
+    precondition = mapping.get("precondition")
+    
+    if not precondition:
+        raise ValueError(f"规则 {parsed_rule.rule_name} 没有 precondition，无法使用 N=auto")
+    
+    # 扫描对话，找到 precondition 满足的轮次
+    triggered_turn = find_precondition_turn(messages, precondition, llm_judge_func)
+    
+    if triggered_turn is None:
+        print(f"⚠ 警告: precondition '{precondition}' 从未满足，跳过该规则")
+        return None
+    
+    # 计算 N = N' + offset
+    return triggered_turn + offset
+
+
+def find_precondition_turn(
+    messages: List[Message],
+    precondition: str,
+    llm_judge_func: Optional[Callable] = None
+) -> Optional[int]:
+    """
+    扫描对话历史，找到满足 precondition 的第一轮
+    
+    Args:
+        messages: 完整对话历史
+        precondition: 前置条件描述
+        llm_judge_func: LLM judge 函数
+    
+    Returns:
+        满足条件的第一轮次编号，如果未满足则返回 None
+    """
+    if not llm_judge_func:
+        print(f"⚠ 警告: 没有 LLM judge，无法检测 precondition '{precondition}'")
+        return None
+    
+    # 跳过 system 消息
+    start_idx = 1 if messages[0].role == "system" else 0
+    max_turns = (len(messages) - start_idx) // 2
+    
+    for turn_id in range(1, max_turns + 1):
+        # 获取该轮的 user 消息
+        user_idx = start_idx + 2 * (turn_id - 1)
+        if user_idx >= len(messages):
+            break
+        
+        user_message = messages[user_idx].content
+        
+        # 使用 LLM judge 检测是否满足 precondition
+        prompt = f"""请检查用户的以下回复是否满足条件：{precondition}
+
+用户回复：{user_message}
+
+只回答：
+- "YES"：满足条件
+- "NO"：不满足条件
+"""
+        
+        try:
+            response = llm_judge_func(user_message, prompt)
+            
+            if response and "YES" in response.upper():
+                return turn_id
+        except Exception as e:
+            print(f"⚠ 警告: 检测 precondition 时出错: {e}")
+            continue
+    
+    return None

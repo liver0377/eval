@@ -10,7 +10,7 @@ from pathlib import Path
 
 from IBench.models.local_model import LocalModel
 from IBench.models.api_model import APIModel
-from IBench.rules.dynamic_rule_registry import DynamicRuleRegistry, ParsedRule
+from IBench.rules.dynamic_rule_registry import DynamicRuleRegistry, ParsedRule, resolve_dynamic_N
 from IBench.rules.kwargs_extractor import KwargsExtractor
 from IBench.rules.single_rules import SingleRuleRegistry
 from IBench.rules.stage_rules import StageRuleRegistry
@@ -137,6 +137,7 @@ class JsonContextEvaluator:
             elif isinstance(rule_config, dict):
                 rule_tag = rule_config["rule"]
                 N = rule_config.get("N")
+                # N 可以是 int、"auto" 或 {"value": "auto", "offset": 1}
             else:
                 print(f"⚠ 警告: 不支持的规则配置格式 {type(rule_config)}，跳过")
                 continue
@@ -315,14 +316,28 @@ class JsonContextEvaluator:
         
         Args:
             parsed_rule: 解析后的规则
-            N: 轮次编号（从1开始）
+            N: 轮次编号（从1开始），可以是 int、"auto" 或 {"value": "auto", "offset": 1}
             messages: 完整的消息列表
         
         Returns:
             评估结果字典
         """
-        if N is None:
-            raise ValueError(f"multi_turn规则 {parsed_rule.full_name} 必须指定N参数")
+        # 解析动态 N 值（支持 auto 模式）
+        resolved_N = resolve_dynamic_N(
+            N,
+            parsed_rule,
+            messages,
+            self._get_llm_judge_func()
+        )
+        
+        # 如果 precondition 未满足，跳过评估
+        if resolved_N is None:
+            return {
+                "triggered": False,
+                "score": 0,
+                "kwargs": {},
+                "reason": f"precondition 未满足，无法评估"
+            }
         
         # 从messages中提取第N轮的assistant回复
         # 轮次计数方式：user + assistant 对算一轮
@@ -335,20 +350,33 @@ class JsonContextEvaluator:
         # user1(start_idx), assistant1(start_idx+1), user2(start_idx+2), assistant2(start_idx+3)...
         # 第N轮的assistant在: start_idx + 2*N - 1
         
-        assistant_idx = start_idx + 2 * N - 1
+        assistant_idx = start_idx + 2 * resolved_N - 1
+        
+        max_turns = (len(messages) - start_idx) // 2
         
         if assistant_idx >= len(messages):
-            raise ValueError(f"轮次N={N}超出范围。messages长度={len(messages)}")
+            print(f"⚠ 警告: 计算的 N={resolved_N} 超出范围（实际{max_turns}轮），跳过该规则")
+            return {
+                "triggered": False,
+                "score": 0,
+                "kwargs": {},
+                "reason": f"N={resolved_N} 超出范围，对话仅有{max_turns}轮"
+            }
         
         target_message = messages[assistant_idx]
         
         if target_message.role != "assistant":
-            raise ValueError(f"第{N}轮的消息不是assistant，实际是: {target_message.role}")
+            return {
+                "triggered": False,
+                "score": 0,
+                "kwargs": {},
+                "reason": f"第{resolved_N}轮的消息不是assistant，实际是: {target_message.role}"
+            }
         
         target_response = target_message.content
         
-        print(f"  评估multi_turn规则: {parsed_rule.full_name}, N={N}")
-        print(f"  目标回复（第{N}轮）: {target_response[:50]}...")
+        print(f"  评估multi_turn规则: {parsed_rule.full_name}, N={resolved_N}")
+        print(f"  目标回复（第{resolved_N}轮）: {target_response[:50]}...")
         
         # 使用stage rule registry评估该回复
         triggered, reason = self.stage_rule_registry.evaluate_rule(

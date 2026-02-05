@@ -170,6 +170,7 @@ RULE_MAPPINGS = {
         "rule_id": 9,
         "rule_name": "prompt_question",
         "score": +1,
+        "precondition": "用户未给明确问题",
         "has_kwargs": True,
         "kwargs_schema": {
             "prompt": {
@@ -239,6 +240,7 @@ RULE_MAPPINGS = {
         "rule_id": 8,
         "rule_name": "primary_only",
         "score": +1,
+        "precondition": "用户提及多种疾病",
         "has_kwargs": True,
         "kwargs_schema": {
             "main_disease": {
@@ -256,6 +258,7 @@ RULE_MAPPINGS = {
         "rule_id": 5,
         "rule_name": "medication_phone",
         "score": +1,
+        "precondition": "用户提及用药史",
         "has_kwargs": True,
         "kwargs_schema": {
             "phrase": {
@@ -272,6 +275,7 @@ RULE_MAPPINGS = {
         "rule_id": 6,
         "rule_name": "complication_phone",
         "score": +1,
+        "precondition": "用户年纪 >= 60岁",
         "has_kwargs": True,
         "kwargs_schema": {
             "disease": {
@@ -288,6 +292,7 @@ RULE_MAPPINGS = {
         "rule_id": 7,
         "rule_name": "expert_phone",
         "score": +1,
+        "precondition": "用户提及其尚未就诊",
         "has_kwargs": True,
         "kwargs_schema": {
             "phrase": {
@@ -304,6 +309,7 @@ RULE_MAPPINGS = {
         "rule_id": 10,
         "rule_name": "report_phone",
         "score": +1,
+        "precondition": "用户已就诊且提及检查报告",
         "has_kwargs": True,
         "kwargs_schema": {
             "phrase": {
@@ -320,6 +326,7 @@ RULE_MAPPINGS = {
         "rule_id": 11,
         "rule_name": "advice_phone",
         "score": +1,
+        "precondition": "用户正在服药并寻求建议",
         "has_kwargs": True,
         "kwargs_schema": {
             "phrase": {
@@ -336,6 +343,7 @@ RULE_MAPPINGS = {
         "rule_id": 12,
         "rule_name": "leave",
         "score": -1,
+        "precondition": "用户尚未给出电话",
         "has_kwargs": True,
         "kwargs_schema": {
             "phrase": {
@@ -352,6 +360,7 @@ RULE_MAPPINGS = {
         "rule_id": 13,
         "rule_name": "ask_wechat",
         "score": +1,
+        "precondition": "用户拒绝给出电话",
         "has_kwargs": True,
         "kwargs_schema": {
             "phrase": {
@@ -368,6 +377,7 @@ RULE_MAPPINGS = {
         "rule_id": 14,
         "rule_name": "final_detainment",
         "score": +1,
+        "precondition": "用户拒绝给出电话和微信",
         "has_kwargs": True,
         "kwargs_schema": {
             "phrase": {
@@ -400,6 +410,7 @@ RULE_MAPPINGS = {
         "rule_id": 16,
         "rule_name": "mental_test",
         "score": +1,
+        "precondition": "用户提及有心理问题",
         "has_kwargs": True,
         "kwargs_schema": {
             "phrase": {
