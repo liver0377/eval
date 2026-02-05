@@ -86,7 +86,7 @@ def test_json_format():
         print(f"✓ Input JSON file loaded successfully")
         print(f"  - Key: {input_data.get('key')}")
         print(f"  - Messages: {len(input_data.get('messages', []))}")
-        print(f"  - Rules: {len(input_data.get('rules', []))}")
+        print(f"  - Rules: {len(input_data.get('rule_list', []))}")
     else:
         print(f"✗ Input JSON file not found: {input_file}")
     
