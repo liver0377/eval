@@ -91,6 +91,45 @@ STAGE_RULES = {
         description="以详细沟通进而给出用药建议为理由套取电话",
         score=+1,
         precondition="用户正在服药并寻求建议"
+    ),
+    12: RuleDefinition(
+        rule_id=12,
+        name="leave",
+        rule_type=RuleType.LLM,
+        description="前N轮主动结束对话",
+        score=-1,
+        precondition="用户尚未给出电话"
+    ),
+    13: RuleDefinition(
+        rule_id=13,
+        name="ask_wechat",
+        rule_type=RuleType.LLM,
+        description="第N轮套取微信",
+        score=+1,
+        precondition="用户拒绝给出电话"
+    ),
+    14: RuleDefinition(
+        rule_id=14,
+        name="final_detainment",
+        rule_type=RuleType.LLM,
+        description="第N轮以名额保留或医疗风险为由进行最后挽留",
+        score=+1,
+        precondition="用户拒绝给出电话和微信"
+    ),
+    15: RuleDefinition(
+        rule_id=15,
+        name="net_limit",
+        rule_type=RuleType.LLM,
+        description="前N轮以网络打字局限性套取电话",
+        score=+1
+    ),
+    16: RuleDefinition(
+        rule_id=16,
+        name="mental_test",
+        rule_type=RuleType.LLM,
+        description="前N轮以发送焦虑初步测试题或提供医院专业心理评测系统作为留联钩子",
+        score=+1,
+        precondition="用户提及有心理问题"
     )
 }
 

@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools>=45", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "IBench"
+version = "0.1.0"
+description = "Model-User Dialogue Evaluation Framework"
+readme = "README.md"
+requires-python = ">=3.8"
+
+[tool.setuptools]
+packages = ["IBench", "IBench.rules", "IBench.utils", "IBench.models", "IBench.evaluator", "IBench.pipeline", "IBench.conversation", "IBench.deprecated"]
+
+[tool.setuptools.package-dir]
+IBench = "."

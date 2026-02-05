@@ -84,6 +84,51 @@ RULE_MAPPINGS = {
         }
     },
 
+    "single_turn:sty:formula": {
+        "type": "single_turn",
+        "rule_id": 6,
+        "rule_name": "formula",
+        "score": -1,
+        "has_kwargs": True,
+        "kwargs_schema": {
+            "phrase": {
+                "type": "string",
+                "description": "命中的客服套话",
+                "default": ""
+            }
+        }
+    },
+
+    "single_turn:sty:punctunation": {
+        "type": "single_turn",
+        "rule_id": 7,
+        "rule_name": "punctunation",
+        "score": -1,
+        "has_kwargs": True,
+        "kwargs_schema": {
+            "phrase": {
+                "type": "string",
+                "description": "命中的标点符号及解释内容",
+                "default": ""
+            }
+        }
+    },
+
+    "single_turn:sty:list": {
+        "type": "single_turn",
+        "rule_id": 8,
+        "rule_name": "list",
+        "score": -1,
+        "has_kwargs": True,
+        "kwargs_schema": {
+            "format": {
+                "type": "string",
+                "description": "列表格式，如1.2.3.",
+                "default": ""
+            }
+        }
+    },
+
     # ========== 阶段规则映射（语义聚类版） ==========
     
     # ask 聚类
@@ -208,7 +253,7 @@ RULE_MAPPINGS = {
     
     "multi_turn:FIRST_N:conv:complication_phone": {
         "type": "stage_turn",
-        "rule_class": "FIRST_N,
+        "rule_class": "FIRST_N",
         "rule_id": 6,
         "rule_name": "complication_phone",
         "score": +1,
@@ -221,10 +266,10 @@ RULE_MAPPINGS = {
             }
         }
     },
-    
+
     "multi_turn:FIRST_N:conv:expert_phone": {
         "type": "stage_turn",
-        "rule_class": "FIRST_N,
+        "rule_class": "FIRST_N",
         "rule_id": 7,
         "rule_name": "expert_phone",
         "score": +1,
@@ -268,5 +313,98 @@ RULE_MAPPINGS = {
                 "default": ""
             }
         }
+    },
+
+    "multi_turn:FIRST_N:conv:leave": {
+        "type": "stage_turn",
+        "rule_class": "FIRST_N",
+        "rule_id": 12,
+        "rule_name": "leave",
+        "score": -1,
+        "has_kwargs": True,
+        "kwargs_schema": {
+            "phrase": {
+                "type": "string",
+                "description": "主动结束对话的语句",
+                "default": ""
+            }
+        }
+    },
+
+    "multi_turn:N_th:conv:ask_wechat": {
+        "type": "stage_turn",
+        "rule_class": "N_th",
+        "rule_id": 13,
+        "rule_name": "ask_wechat",
+        "score": +1,
+        "has_kwargs": True,
+        "kwargs_schema": {
+            "phrase": {
+                "type": "string",
+                "description": "套取微信的语句",
+                "default": ""
+            }
+        }
+    },
+
+    "multi_turn:N_th:conv:final_detainment": {
+        "type": "stage_turn",
+        "rule_class": "N_th",
+        "rule_id": 14,
+        "rule_name": "final_detainment",
+        "score": +1,
+        "has_kwargs": True,
+        "kwargs_schema": {
+            "phrase": {
+                "type": "string",
+                "description": "最后挽留的语句",
+                "default": ""
+            }
+        }
+    },
+
+    "multi_turn:FIRST_N:sty:net_limit": {
+        "type": "stage_turn",
+        "rule_class": "FIRST_N",
+        "rule_id": 15,
+        "rule_name": "net_limit",
+        "score": +1,
+        "has_kwargs": True,
+        "kwargs_schema": {
+            "phrase": {
+                "type": "string",
+                "description": "网络打字局限性相关语句",
+                "default": ""
+            }
+        }
+    },
+
+    "multi_turn:FIRST_N:conv:mental_test": {
+        "type": "stage_turn",
+        "rule_class": "FIRST_N",
+        "rule_id": 16,
+        "rule_name": "mental_test",
+        "score": +1,
+        "has_kwargs": True,
+        "kwargs_schema": {
+            "phrase": {
+                "type": "string",
+                "description": "心理测试相关语句",
+                "default": ""
+            }
+        }
     }
 }
+
+
+def get_rule_mapping(rule_full_name: str) -> dict:
+    """
+    Get rule mapping by full name
+
+    Args:
+        rule_full_name: Full rule name (e.g., "single_turn:sty:gratitude" or "multi_turn:FIRST_N:ask:consult_subject")
+
+    Returns:
+        Rule mapping dictionary if found, None otherwise
+    """
+    return RULE_MAPPINGS.get(rule_full_name)

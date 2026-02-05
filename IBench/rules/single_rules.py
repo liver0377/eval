@@ -42,6 +42,27 @@ SINGLE_RULES = {
         rule_type=RuleType.LLM,
         description="直接给出疾病名称",
         score=-1
+    ),
+    6: RuleDefinition(
+        rule_id=6,
+        name="formula",
+        rule_type=RuleType.LLM,
+        description="使用客服套话，如为了更好地为您服务或敬请谅解",
+        score=-1
+    ),
+    7: RuleDefinition(
+        rule_id=7,
+        name="punctunation",
+        rule_type=RuleType.RULE,
+        description="使用引号或括号进行解释",
+        score=-1
+    ),
+    8: RuleDefinition(
+        rule_id=8,
+        name="list",
+        rule_type=RuleType.RULE,
+        description="使用1.2.3.列表式回复",
+        score=-1
     )
 }
 
@@ -108,13 +129,35 @@ class SingleRuleRegistry:
         rule: RuleDefinition
     ) -> tuple[bool, str]:
         """Evaluate rule-based rules"""
-        
+
         # Rule 4: Check for multiple questions (multiple_questions)
         if rule_id == 4 or rule.name == "multiple_questions":
             question_count = response.count('？') + response.count('?')
             passed = question_count <= 1
             return passed, f"{'违规' if not passed else '未违规'}: 发现{question_count}个问号" if not passed else "未违规: 只有一个或零个问号"
-        
+
+        # Rule 7: Check for punctuation used for explanation (punctunation)
+        if rule_id == 7 or rule.name == "punctunation":
+            # Check for quotes or brackets used for explanation
+            has_quotes = bool(re.search(r'["\"][^\"\"]*["\"]', response))
+            has_single_quotes = bool(re.search(r"['\'][^'\']*['\']", response))
+            has_parens = bool(re.search(r'\([^)]*\)', response))
+            has_dashes = bool(re.search(r'—[^—]*—', response))
+            has_hyphens = bool(re.search(r'-[^-]*-', response))
+
+            if has_quotes or has_single_quotes or has_parens or has_dashes or has_hyphens:
+                return False, "违规: 使用了标点符号进行解释"
+            return True, "未违规: 未使用标点符号进行解释"
+
+        # Rule 8: Check for list format (list)
+        if rule_id == 8 or rule.name == "list":
+            # Check for numbered list format like "1.", "2.", "3."
+            list_pattern = r'^\s*\d+\.\s'
+            lines = response.split('\n')
+            list_count = sum(1 for line in lines if re.match(list_pattern, line))
+            passed = list_count == 0
+            return passed, f"{'违规' if not passed else '未违规'}: 发现{list_count}个列表项" if not passed else "未违规: 未使用列表格式"
+
         return True, "规则未实现"
     
     def _evaluate_llm_based(

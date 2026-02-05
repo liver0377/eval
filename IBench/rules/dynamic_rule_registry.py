@@ -40,7 +40,8 @@ class DynamicRuleRegistry:
         Args:
             rule_full_name: 完整规则名称
                 单轮规则: "single_turn:sty:gratitude"
-                阶段规则: "multi_turn:FIRST_N:consult_subject" 或 "multi_turn:N_th:gender"
+                阶段规则（新格式）: "multi_turn:FIRST_N:ask:consult_subject"
+                阶段规则（旧格式）: "multi_turn:FIRST_N:consult_subject"
 
         Returns:
             ParsedRule对象，如果未找到则返回None
@@ -52,10 +53,31 @@ class DynamicRuleRegistry:
 
         # 解析规则名称
         parts = rule_full_name.split(":")
-        if len(parts) != 3:
+        if len(parts) < 3:
             return None
 
-        rule_type, rule_class, rule_name = parts
+        rule_type = parts[0]
+
+        if rule_type == "single_turn":
+            # single_turn:category:rule_name (3 parts)
+            if len(parts) != 3:
+                return None
+            _, category, rule_name = parts
+            rule_class = None
+        elif rule_type == "multi_turn":
+            # 支持两种格式:
+            # 新格式: multi_turn:FIRST_N:ask:consult_subject (4 parts)
+            # 旧格式: multi_turn:FIRST_N:consult_subject (3 parts)
+            if len(parts) == 4:
+                # 新格式: multi_turn:turn_class:category:rule_name
+                _, rule_class, category, rule_name = parts
+            elif len(parts) == 3:
+                # 旧格式: multi_turn:turn_class:rule_name
+                _, rule_class, rule_name = parts
+            else:
+                return None
+        else:
+            return None
 
         return ParsedRule(
             full_name=rule_full_name,

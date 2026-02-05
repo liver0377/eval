@@ -40,10 +40,13 @@
 | 规则名         | 约束                                                   | 语义level | score | 分类 |
 | -------------- | ------------------------------------------------------ | --------- | ----- | ---- |
 | gratitude      | 使用感谢用语                                           | sty       | -1    | LLM  |
-| explain_filler | 使用解释性话句（如"这有助于…""了解到"） \| hard        | sty       | -1    | LLM  |
+| explain_filler | 使用解释性话句（如"这有助于…""了解到"                  | sty       | -1    | LLM  |
 | forced_symptom | 使用宽泛问诊语句 (如"有什么症状", 而不是"有...症状么") | med       | -1    | LLM  |
 | multi_question | 一条消息问多个问题                                     | ask       | -1    | Rule |
 | diagnosis_name | 直接给出疾病名称                                       | med       | -1    | LLM  |
+| formula        | 使用“为了更好地为您服务”、“敬请谅解”等客服套话         | sty       | -1    | LLM  |
+| punctunation   | 使用引号，破折号或者括号进行解释                       | sty       | -1    | Rule |
+| list           | 使用 1. 2. 3. 列表式回复                               | sty       | -1    | Rule |
 
 对于模型输出的每条回复，都要应用`single_turn`的规则检查
 
@@ -76,13 +79,18 @@
 | visit_history      | FIRST_N    | med        | 前**{N}**轮提及用户就诊史**{phrase}**                        |                                      | -1    | LLM      |
 | test_invite        | FIRST_N    | med        | 前**{N}**轮提出检查邀约**{phrase}**                          | 用户没提及检查相关**{pre_phrase}**   | -1    | LLM      |
 | gender             | FIRST_N    | demo       | 前**{N}**轮询问到用户的性别**{gender}**                      |                                      | +1    | Rule     |
-| medication_phone   | FIRST_N    | conv       | 前**{N}**轮以用药为理由**{phrase}**套取电话                  | 用户提及用药史{pre_phrase}           | +1    | LLM      |
+| medication_phone   | FIRST_N    | conv       | 前**{N}**轮以用药为理由**{phrase}**套取电话                  | 用户提及用药史**{pre_phrase}**       | +1    | LLM      |
 | complication_phone | FIRST_N    | conv       | 前**{N}**轮以并发症**{disease}**为理由套取电话                | 用户年龄 >= **{age}**岁              | +1    | LLM      |
 | expert_phone       | FIRST_N    | conv       | 前**{N}**轮以“提议以真人专家通过微信/电话的形式进行专业解读"为理由**{phrase}**套取电话 | 用户提及其尚未就诊**{pre_phrase}**   | +1    | LLM      |
 | primary_only       | FIRST_N    | scope      | 前**{N}**轮仅围绕主要病症**{main_disease}**给出回复           | 用户提及多种疾病**{pre_diseases}**    | +1    | LLM      |
 | prompt_question    | FIRST_N    | ask        | 前**{N}**轮给出引导， 如“您身体有什么不适么”                 | 用户未给明确问题                     | +1    | LLM      |
 | report_phone       | FIRST_N    | conv       | 前**{N}**轮结合报告给出病情建议**{phrase}**， 进而套取电话进行联系 | 用户已就诊且提及检查报告**{phrase}** | +1    | LLM      |
-| advice_phone       | FIRST_N    | conv       | 前**{N}**以“详细沟通进而给出用药建议”为理由**{phrase}**套取电话 | 用户正在服药并寻求建议               | +1    | LLM      |
+| advice_phone       | FIRST_N    | conv       | 前**{N}**以“详细沟通进而给出用药建议”为理由**{phrase}**套取电话 | 用户正在服药并寻求建议**{pre_phrase}** | +1    | LLM      |
+| leave | FIRST_N | conv | 前**{N}**轮主动结束对话**{phrase}** | 用户尚未给出电话 | -1 | LLM |
+| ask_wechat | N_th | conv | 第**{N}**轮套取微信 | 用户拒绝给出电话**{pre_phrase}** | +1 | LLM |
+| final_detainment | N_th | conv | 第**{N}**轮以“名额保留”或“医疗风险”为由进行最后挽留 | 用户拒绝给出电话和微信**{pre_phrase}** | +1 | LLM |
+| net_limit | FIRST_N | sty | 前**{N}**轮以"网络打字局限性"套取电话**{phrase}** |  | +1 | LLM |
+| mental_test | FIRST_N | conv | 前**{N}**轮以"发送焦虑初步测试题”, "提供医院专业心理评测系统"作为留联钩子**{phrase}** | 用户提及有心理问题**{pre_phrase}** | +1 | LLM |
 
 
 
