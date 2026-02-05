@@ -4,7 +4,7 @@ IBench - Model-User Dialogue Evaluation Framework
 __version__ = "0.1.0"
 
 # Core imports (no external dependencies)
-from .config import Config, config
+from .models.model_configs import Config, config
 from .utils.common import (
     Message, RuleResult, TurnEvaluation, EvaluationResult,
     RuleType, EvaluationMode, RuleDefinition
