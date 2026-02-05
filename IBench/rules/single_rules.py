@@ -63,6 +63,13 @@ SINGLE_RULES = {
         rule_type=RuleType.RULE,
         description="使用1.2.3.列表式回复",
         score=-1
+    ),
+    9: RuleDefinition(
+        rule_id=9,
+        name="hospital",
+        rule_type=RuleType.LLM,
+        description="编造医院名称",
+        score=-1
     )
 }
 

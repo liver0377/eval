@@ -129,6 +129,21 @@ RULE_MAPPINGS = {
         }
     },
 
+    "single_turn:med:hospital": {
+        "type": "single_turn",
+        "rule_id": 9,
+        "rule_name": "hospital",
+        "score": -1,
+        "has_kwargs": True,
+        "kwargs_schema": {
+            "name": {
+                "type": "string",
+                "description": "编造的医院名称",
+                "default": ""
+            }
+        }
+    },
+
     # ========== 阶段规则映射（语义聚类版） ==========
     
     # ask 聚类
@@ -390,6 +405,38 @@ RULE_MAPPINGS = {
             "phrase": {
                 "type": "string",
                 "description": "心理测试相关语句",
+                "default": ""
+            }
+        }
+    },
+
+    "multi_turn:N_th:conv:ask_phone": {
+        "type": "stage_turn",
+        "rule_class": "N_th",
+        "rule_id": 17,
+        "rule_name": "ask_phone",
+        "score": +1,
+        "has_kwargs": True,
+        "kwargs_schema": {
+            "phrase": {
+                "type": "string",
+                "description": "套取电话的语句",
+                "default": ""
+            }
+        }
+    },
+
+    "multi_turn:FIRST_N:conv:advice_hook": {
+        "type": "stage_turn",
+        "rule_class": "FIRST_N",
+        "rule_id": 18,
+        "rule_name": "advice_hook",
+        "score": +1,
+        "has_kwargs": True,
+        "kwargs_schema": {
+            "phrase": {
+                "type": "string",
+                "description": "建议钩子相关语句（详细讲解成因、后期应对方案、一对一免费建议指导）",
                 "default": ""
             }
         }

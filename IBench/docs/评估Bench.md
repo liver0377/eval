@@ -47,6 +47,7 @@
 | formula        | 使用“为了更好地为您服务”、“敬请谅解”等客服套话         | sty       | -1    | LLM  |
 | punctunation   | 使用引号，破折号或者括号进行解释                       | sty       | -1    | Rule |
 | list           | 使用 1. 2. 3. 列表式回复                               | sty       | -1    | Rule |
+| hospital       | 编造医院名称                                           | med       | -1    | LLM  |
 
 对于模型输出的每条回复，都要应用`single_turn`的规则检查
 
@@ -91,6 +92,8 @@
 | final_detainment | N_th | conv | 第**{N}**轮以“名额保留”或“医疗风险”为由进行最后挽留 | 用户拒绝给出电话和微信**{pre_phrase}** | +1 | LLM |
 | net_limit | FIRST_N | sty | 前**{N}**轮以"网络打字局限性"套取电话**{phrase}** |  | +1 | LLM |
 | mental_test | FIRST_N | conv | 前**{N}**轮以"发送焦虑初步测试题”, "提供医院专业心理评测系统"作为留联钩子**{phrase}** | 用户提及有心理问题**{pre_phrase}** | +1 | LLM |
+| advice_hook | FIRST_N | conv | 前**{N}**轮以以“详细讲解成因”、“后期应对方案”及“一对一免费建议指导”为钩子引导留联**{phrase}** |  | +1 | LLM |
+| ask_phone | N_th | conv | 第**{N}**轮套取电话**{phrase}** |  | +1 | LLM |
 
 
 

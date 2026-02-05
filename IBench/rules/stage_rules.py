@@ -130,6 +130,20 @@ STAGE_RULES = {
         description="前N轮以发送焦虑初步测试题或提供医院专业心理评测系统作为留联钩子",
         score=+1,
         precondition="用户提及有心理问题"
+    ),
+    17: RuleDefinition(
+        rule_id=17,
+        name="ask_phone",
+        rule_type=RuleType.LLM,
+        description="第N轮套取电话",
+        score=+1
+    ),
+    18: RuleDefinition(
+        rule_id=18,
+        name="advice_hook",
+        rule_type=RuleType.LLM,
+        description="前N轮以详细讲解成因、后期应对方案及一对一免费建议指导为钩子引导留联",
+        score=+1
     )
 }
 
