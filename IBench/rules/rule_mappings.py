@@ -153,6 +153,7 @@ RULE_MAPPINGS = {
         "rule_id": 1,
         "rule_name": "consult_subject",
         "score": +1,
+        "n_source": "fixed",
         "has_kwargs": True,
         "kwargs_schema": {
             "who": {
@@ -164,12 +165,13 @@ RULE_MAPPINGS = {
         }
     },
     
-    "multi_turn:N_th:ask:prompt_question": {
+    "multi_turn:FIRST_N:ask:prompt_question": {
         "type": "stage_turn",
-        "rule_class": "N_th",
+        "rule_class": "FIRST_N",
         "rule_id": 9,
         "rule_name": "prompt_question",
         "score": +1,
+        "n_source": "fixed",
         "precondition": "用户未给明确问题",
         "has_kwargs": True,
         "kwargs_schema": {
@@ -189,6 +191,7 @@ RULE_MAPPINGS = {
         "rule_id": 2,
         "rule_name": "visit_history",
         "score": -1,
+        "n_source": "fixed",
         "has_kwargs": True,
         "kwargs_schema": {
             "phrase": {
@@ -199,29 +202,37 @@ RULE_MAPPINGS = {
         }
     },
     
-    "multi_turn:N_th:med:test_invite": {
+    "multi_turn:FIRST_N:med:test_invite": {
         "type": "stage_turn",
-        "rule_class": "N_th",
+        "rule_class": "FIRST_N",
         "rule_id": 3,
         "rule_name": "test_invite",
         "score": -1,
+        "n_source": "fixed",
+        "precondition": "用户没提及检查相关",
         "has_kwargs": True,
         "kwargs_schema": {
             "phrase": {
                 "type": "string",
-                "description": "检查邀约的类型",
+                "description": "检查邀约相关语句",
+                "default": ""
+            },
+            "pre_phrase": {
+                "type": "string",
+                "description": "前置检查相关短语",
                 "default": ""
             }
         }
     },
     
     # demo 聚类
-    "multi_turn:N_th:demo:gender": {
+    "multi_turn:FIRST_N:demo:gender": {
         "type": "stage_turn",
-        "rule_class": "N_th",
+        "rule_class": "FIRST_N",
         "rule_id": 4,
         "rule_name": "gender",
         "score": +1,
+        "n_source": "fixed",
         "has_kwargs": True,
         "kwargs_schema": {
             "gender": {
@@ -240,6 +251,7 @@ RULE_MAPPINGS = {
         "rule_id": 8,
         "rule_name": "primary_only",
         "score": +1,
+        "n_source": "fixed",
         "precondition": "用户提及多种疾病",
         "has_kwargs": True,
         "kwargs_schema": {
@@ -252,18 +264,24 @@ RULE_MAPPINGS = {
     },
     
     # conv 聚类
-    "multi_turn:FIRST_N:conv:medication_phone": {
+    "multi_turn:N_th:conv:medication_phone": {
         "type": "stage_turn",
-        "rule_class": "FIRST_N",
+        "rule_class": "N_th",
         "rule_id": 5,
         "rule_name": "medication_phone",
         "score": +1,
+        "n_source": "auto",
         "precondition": "用户提及用药史",
         "has_kwargs": True,
         "kwargs_schema": {
             "phrase": {
                 "type": "string",
-                "description": "用药相关语句",
+                "description": "用药套电话语句",
+                "default": ""
+            },
+            "pre_phrase": {
+                "type": "string",
+                "description": "前置用药相关短语",
                 "default": ""
             }
         }
@@ -275,13 +293,19 @@ RULE_MAPPINGS = {
         "rule_id": 6,
         "rule_name": "complication_phone",
         "score": +1,
-        "precondition": "用户年纪 >= 60岁",
+        "n_source": "fixed",
+        "precondition": "用户年龄 >= {age}岁",
         "has_kwargs": True,
         "kwargs_schema": {
             "disease": {
                 "type": "string",
                 "description": "提到的并发症疾病",
                 "default": ""
+            },
+            "age": {
+                "type": "int",
+                "description": "年龄阈值",
+                "default": 60
             }
         }
     },
@@ -292,12 +316,18 @@ RULE_MAPPINGS = {
         "rule_id": 7,
         "rule_name": "expert_phone",
         "score": +1,
+        "n_source": "fixed",
         "precondition": "用户提及其尚未就诊",
         "has_kwargs": True,
         "kwargs_schema": {
             "phrase": {
                 "type": "string",
                 "description": "专家解读相关语句",
+                "default": ""
+            },
+            "pre_phrase": {
+                "type": "string",
+                "description": "前置未就诊相关短语",
                 "default": ""
             }
         }
@@ -309,29 +339,41 @@ RULE_MAPPINGS = {
         "rule_id": 10,
         "rule_name": "report_phone",
         "score": +1,
-        "precondition": "用户已就诊且提及检查报告",
+        "n_source": "auto",
+        "precondition": "用户提及检查报告",
         "has_kwargs": True,
         "kwargs_schema": {
             "phrase": {
                 "type": "string",
                 "description": "报告建议和套电话语句",
                 "default": ""
+            },
+            "pre_phrase": {
+                "type": "string",
+                "description": "前置报告相关短语",
+                "default": ""
             }
         }
     },
     
-    "multi_turn:N_th:conv:advice_phone": {
+    "multi_turn:FIRST_N:conv:advice_phone": {
         "type": "stage_turn",
-        "rule_class": "N_th",
+        "rule_class": "FIRST_N",
         "rule_id": 11,
         "rule_name": "advice_phone",
         "score": +1,
+        "n_source": "fixed",
         "precondition": "用户正在服药并寻求建议",
         "has_kwargs": True,
         "kwargs_schema": {
             "phrase": {
                 "type": "string",
-                "description": "用药建议相关语句",
+                "description": "详细沟通进而给出用药建议相关语句",
+                "default": ""
+            },
+            "pre_phrase": {
+                "type": "string",
+                "description": "前置正在服药并寻求建议相关短语",
                 "default": ""
             }
         }
@@ -343,6 +385,7 @@ RULE_MAPPINGS = {
         "rule_id": 12,
         "rule_name": "leave",
         "score": -1,
+        "n_source": "fixed",
         "precondition": "用户尚未给出电话",
         "has_kwargs": True,
         "kwargs_schema": {
@@ -360,12 +403,18 @@ RULE_MAPPINGS = {
         "rule_id": 13,
         "rule_name": "ask_wechat",
         "score": +1,
+        "n_source": "auto",
         "precondition": "用户拒绝给出电话",
         "has_kwargs": True,
         "kwargs_schema": {
             "phrase": {
                 "type": "string",
                 "description": "套取微信的语句",
+                "default": ""
+            },
+            "pre_phrase": {
+                "type": "string",
+                "description": "前置拒绝电话相关短语",
                 "default": ""
             }
         }
@@ -377,12 +426,18 @@ RULE_MAPPINGS = {
         "rule_id": 14,
         "rule_name": "final_detainment",
         "score": +1,
+        "n_source": "auto",
         "precondition": "用户拒绝给出电话和微信",
         "has_kwargs": True,
         "kwargs_schema": {
             "phrase": {
                 "type": "string",
                 "description": "最后挽留的语句",
+                "default": ""
+            },
+            "pre_phrase": {
+                "type": "string",
+                "description": "前置拒绝电话和微信相关短语",
                 "default": ""
             }
         }
@@ -394,6 +449,7 @@ RULE_MAPPINGS = {
         "rule_id": 15,
         "rule_name": "net_limit",
         "score": +1,
+        "n_source": "fixed",
         "has_kwargs": True,
         "kwargs_schema": {
             "phrase": {
@@ -404,18 +460,24 @@ RULE_MAPPINGS = {
         }
     },
 
-    "multi_turn:FIRST_N:conv:mental_test": {
+    "multi_turn:N_th:conv:mental_test": {
         "type": "stage_turn",
-        "rule_class": "FIRST_N",
+        "rule_class": "N_th",
         "rule_id": 16,
         "rule_name": "mental_test",
         "score": +1,
+        "n_source": "auto",
         "precondition": "用户提及有心理问题",
         "has_kwargs": True,
         "kwargs_schema": {
             "phrase": {
                 "type": "string",
-                "description": "心理测试相关语句",
+                "description": "发送焦虑初步测试题或提供医院专业心理评测系统相关语句",
+                "default": ""
+            },
+            "pre_phrase": {
+                "type": "string",
+                "description": "前置心理问题相关短语",
                 "default": ""
             }
         }
@@ -427,6 +489,7 @@ RULE_MAPPINGS = {
         "rule_id": 17,
         "rule_name": "ask_phone",
         "score": +1,
+        "n_source": "fixed",
         "has_kwargs": True,
         "kwargs_schema": {
             "phrase": {
@@ -443,6 +506,7 @@ RULE_MAPPINGS = {
         "rule_id": 18,
         "rule_name": "advice_hook",
         "score": +1,
+        "n_source": "fixed",
         "has_kwargs": True,
         "kwargs_schema": {
             "phrase": {

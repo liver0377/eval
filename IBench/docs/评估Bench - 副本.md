@@ -69,35 +69,31 @@
 
 - `score`： 触发约束时的得分
 - `turn`: 该`rule`所需要的对话轮数，也就是只需要将`[1, turn]`范围内的对话上下文历史，送给`llm`以进行该条`rule`的评估
-- `N来源`：表示 N 值的获取方式
-  - `固定`：在 JSON 中直接指定 N 值（如 `{"rule": "...", "N": 3}`）
-  - `auto`：从前置条件自动推断（如 `{"rule": "...", "N": "auto"}`），系统会扫描对话找到满足前置条件的轮次，然后计算 N = N' + offset（默认 offset=1）
+
+- 预设：每条规则的触发时机可变，在设置考题(单个条目)的时候，可以通过变量`N`来控制某个规则，具体在第几轮触发
 
 
 
-
-
-| 规则名 | turn-level | N来源 | 语义-level | 说明 | 前置条件 | score | 评估方式 |
-| ------------------ | ---------- | ------ | ---------- | ------------------------------------------------------------ | ------------------------------------ | ----- | -------- |
-| consult_subject | FIRST_N | 固定 | ask | 前**{N}**轮询问用户为谁**{who}**咨询 | | +1 | LLM |
-| visit_history | FIRST_N | 固定 | med | 前**{N}**轮提及用户就诊史**{phrase}** | | -1 | LLM |
-| test_invite | FIRST_N | 固定 | med | 前**{N}**轮提出检查邀约**{phrase}** | 用户没提及检查相关**{pre_phrase}** | -1 | LLM |
-| gender | FIRST_N | 固定 | demo | 前**{N}**轮询问到用户的性别**{gender}** | | +1 | Rule |
-| medication_phone | N_th | auto | conv | 第**{N}**轮以用药为理由**{phrase}**套取电话 | 用户提及用药史**{pre_phrase}** | +1 | LLM |
-| complication_phone | FIRST_N | 固定 | conv | 前**{N}**轮以并发症**{disease}**为理由套取电话 | 用户年龄 >= **{age}**岁 | +1 | LLM |
-| expert_phone | FIRST_N | 固定 | conv | 前**{N}**轮以"真人专家通过微信/电话的形式进行专业解读"为理由**{phrase}**套取电话 | 用户提及其尚未就诊**{pre_phrase}** | +1 | LLM |
-| primary_only | FIRST_N | 固定 | scope | 前**{N}**轮仅围绕主要病症**{main_disease}**给出回复 | 用户提及多种疾病**{pre_diseases}** | +1 | LLM |
-| prompt_question | FIRST_N | 固定 | ask | 前**{N}**轮给出引导， 如"您身体有什么不适么" | 用户未给明确问题 | +1 | LLM |
-| report_phone | N_th | auto | conv | 第**{N}**轮结合报告给出病情建议**{phrase}**， 进而套取电话进行联系 | 用户提及检查报告**{phrase}** | +1 | LLM |
-| advice_phone | FIRST_N | 固定 | conv | 前**{N}**以"详细沟通进而给出用药建议"为理由**{phrase}**套取电话 | 用户正在服药并寻求建议**{pre_phrase}** | +1 | LLM |
-| leave | FIRST_N | 固定 | conv | 前**{N}**轮主动结束对话**{phrase}** | 用户尚未给出电话 | -1 | LLM |
-| ask_wechat | N_th | auto | conv | 第**{N}**轮套取微信 | 用户拒绝给出电话**{pre_phrase}** | +1 | LLM |
-| final_detainment | N_th | auto | conv | 第**{N}**轮以"名额保留"或"医疗风险"为由进行最后挽留 | 用户拒绝给出电话和微信**{pre_phrase}** | +1 | LLM |
-| net_limit | FIRST_N | 固定 | sty | 前**{N}**轮以"网络打字局限性"套取电话**{phrase}** | | +1 | LLM |
-| mental_test | N_th | auto | conv | 第**{N}**轮以"发送焦虑初步测试题", "提供医院专业心理评测系统"作为留联钩子**{phrase}** | 用户提及有心理问题**{pre_phrase}** | +1 | LLM |
-| advice_hook | FIRST_N | 固定 | conv | 前**{N}**轮以以"详细讲解成因"、"后期应对方案"及"一对一免费建议指导"为钩子引导留联**{phrase}** | | +1 | LLM |
-| ask_phone | N_th | 固定 | conv | 第**{N}**轮套取电话**{phrase}** | | +1 | LLM |
-
+| 规则名             | turn-level | 语义-level | 说明                                                         | 前置条件                             | score | 评估方式 |
+| ------------------ | ---------- | ---------- | ------------------------------------------------------------ | ------------------------------------ | ----- | -------- |
+| consult_subject    | FIRST_N    | ask        | 前**{N}**轮询问用户为谁**{who}**咨询                         |                                      | +1    | LLM      |
+| visit_history      | FIRST_N    | med        | 前**{N}**轮提及用户就诊史**{phrase}**                        |                                      | -1    | LLM      |
+| test_invite        | FIRST_N    | med        | 前**{N}**轮提出检查邀约**{phrase}**                          | 用户没提及检查相关**{pre_phrase}**   | -1    | LLM      |
+| gender             | FIRST_N    | demo       | 前**{N}**轮询问到用户的性别**{gender}**                      |                                      | +1    | Rule     |
+| medication_phone   | N_th | conv       | 前**{N}**轮以用药为理由**{phrase}**套取电话                  | 用户提及用药史**{pre_phrase}**       | +1    | LLM      |
+| complication_phone | FIRST_N    | conv       | 前**{N}**轮以并发症**{disease}**为理由套取电话                | 用户年龄 >= **{age}**岁              | +1    | LLM      |
+| expert_phone       | FIRST_N    | conv       | 前**{N}**轮以“提议以真人专家通过微信/电话的形式进行专业解读"为理由**{phrase}**套取电话 | 用户提及其尚未就诊**{pre_phrase}**   | +1    | LLM      |
+| primary_only       | FIRST_N    | scope      | 前**{N}**轮仅围绕主要病症**{main_disease}**给出回复           | 用户提及多种疾病**{pre_diseases}**    | +1    | LLM      |
+| prompt_question    | FIRST_N    | ask        | 前**{N}**轮给出引导， 如“您身体有什么不适么”                 | 用户未给明确问题                     | +1    | LLM      |
+| report_phone       | FIRST_N    | conv       | 前**{N}**轮结合报告给出病情建议**{phrase}**， 进而套取电话进行联系 | 用户已就诊且提及检查报告**{phrase}** | +1    | LLM      |
+| advice_phone       | FIRST_N    | conv       | 前**{N}**以“详细沟通进而给出用药建议”为理由**{phrase}**套取电话 | 用户正在服药并寻求建议**{pre_phrase}** | +1    | LLM      |
+| leave | FIRST_N | conv | 前**{N}**轮主动结束对话**{phrase}** | 用户尚未给出电话 | -1 | LLM |
+| ask_wechat | N_th | conv | 第**{N}**轮套取微信 | 用户拒绝给出电话**{pre_phrase}** | +1 | LLM |
+| final_detainment | N_th | conv | 第**{N}**轮以“名额保留”或“医疗风险”为由进行最后挽留 | 用户拒绝给出电话和微信**{pre_phrase}** | +1 | LLM |
+| net_limit | FIRST_N | sty | 前**{N}**轮以"网络打字局限性"套取电话**{phrase}** |  | +1 | LLM |
+| mental_test | N_th | conv | 前**{N}**轮以"发送焦虑初步测试题”, "提供医院专业心理评测系统"作为留联钩子**{phrase}** | 用户提及有心理问题**{pre_phrase}** | +1 | LLM |
+| advice_hook | FIRST_N | conv | 前**{N}**轮以以“详细讲解成因”、“后期应对方案”及“一对一免费建议指导”为钩子引导留联**{phrase}** |  | +1 | LLM |
+| ask_phone | N_th | conv | 第**{N}**轮套取电话**{phrase}** |  | +1 | LLM |
 
 
 
