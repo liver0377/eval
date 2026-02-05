@@ -5,7 +5,7 @@
 
 from IBench.rules.single_rules import SingleRuleRegistry
 from IBench.rules.stage_rules import StageRuleRegistry
-from IBench.config import EvaluationConfig
+from IBench.models.model_configs import EvaluationConfig
 
 def test_single_rule_registry():
     """测试单轮规则注册表"""
@@ -104,51 +104,9 @@ def test_stage_rule_registry():
     print("   ✓ 规则名称转换成功")
 
 
-def test_evaluation_config():
-    """测试评估配置"""
-    print("\n" + "=" * 60)
-    print("测试评估配置")
-    print("=" * 60)
-    
-    # 测试：使用规则名称配置
-    print("\n1. 使用规则名称配置:")
-    config = EvaluationConfig(
-        single_rule_turns={
-            1: ["emotional_comfort", "explanatory_statements"],
-            2: ["symptom_inquiry", "multiple_questions"]
-        },
-        stage_rule_turns={
-            1: ["inquire_consultation_target"],
-            4: ["inquire_gender"]
-        }
-    )
-    
-    print(f"   单轮规则配置:")
-    for turn_id, rules in config.single_rule_turns.items():
-        print(f"     轮次{turn_id}: {rules}")
-    print(f"   阶段规则配置:")
-    for turn_id, rules in config.stage_rule_turns.items():
-        print(f"     轮次{turn_id}: {rules}")
-    
-    # 验证配置
-    assert config.single_rule_turns[1] == ["emotional_comfort", "explanatory_statements"]
-    assert config.stage_rule_turns[4] == ["inquire_gender"]
-    print("   ✓ 配置成功")
-    
-    # 验证与注册表集成
-    print("\n2. 验证与注册表集成:")
-    single_registry = SingleRuleRegistry()
-    stage_registry = StageRuleRegistry()
-    
-    single_rule_ids = single_registry.get_rules_for_turn(1, config.single_rule_turns)
-    stage_rule_ids = stage_registry.get_rules_for_turn(4, config.stage_rule_turns)
-    
-    print(f"   轮次1单轮规则IDs: {single_rule_ids}")
-    print(f"   轮次4阶段规则IDs: {stage_rule_ids}")
-    
-    assert single_rule_ids == [1, 2]
-    assert stage_rule_ids == [4]
-    print("   ✓ 与注册表集成成功")
+# DEPRECATED: test_evaluation_config() function removed
+# Rule mapping functionality has been removed from EvaluationConfig
+# Rules are now dynamically loaded from JSON files
 
 
 def main():
@@ -160,7 +118,7 @@ def main():
     try:
         test_single_rule_registry()
         test_stage_rule_registry()
-        test_evaluation_config()
+        # test_evaluation_config()  # Removed - rule mapping deprecated
         
         print("\n" + "=" * 60)
         print("✓ 所有测试通过！")

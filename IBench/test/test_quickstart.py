@@ -124,26 +124,18 @@ def test_configuration():
     """Test configuration"""
     print("\n=== Testing Configuration ===\n")
     
-    from IBench.config import Config, ModelConfig, EvaluationConfig
+    from IBench.models.model_configs import Config, EvaluationConfig
     
-    # Test ModelConfig
-    model_config = ModelConfig(
-        local_model_path="./models/qwen3-8b",
-        api_key="test-key"
-    )
-    print(f"Model path: {model_config.local_model_path}")
-    print(f"API base: {model_config.api_base}")
+    # Test Config (which includes model config from registry)
+    config = Config()
+    print(f"Model name: {config.model.name}")
+    print(f"Model path: {config.model.path}")
+    print(f"API base: {config.model.api_base}")
     
     # Test EvaluationConfig
     eval_config = EvaluationConfig()
     print(f"\nOutput dir: {eval_config.output_dir}")
     print(f"Max turns: {eval_config.max_conversation_turns}")
-    print(f"Single rule turns: {eval_config.single_rule_turns}")
-    print(f"Stage rule turns: {eval_config.stage_rule_turns}")
-    
-    # Test Config
-    config = Config()
-    print(f"\nGlobal config validation: {config.validate()}")
     
     print("\n✓ Configuration test passed")
 

@@ -3,7 +3,7 @@ System Prompt 使用示例
 展示如何使用系统提示词约束模型输出
 """
 
-from IBench.config import ModelConfig
+from IBench.models.model_configs import ModelConfig
 from IBench.models.local_model import LocalModel
 from IBench.utils.common import Message
 

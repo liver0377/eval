@@ -5,7 +5,7 @@ Simulates user behavior using API-based model
 from typing import Optional, List
 from IBench.utils.common import Message
 from IBench.models.api_model import APIModel
-from IBench.config import ModelConfig
+from IBench.models.model_configs import ModelConfig
 
 class UserSimulator:
     """User simulator using API model"""

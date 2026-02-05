@@ -4,7 +4,7 @@ JSON Context Evaluator 使用示例
 """
 
 from IBench.pipeline.json_context_evaluator import JsonContextEvaluator
-from IBench.config import Config
+from IBench.models.model_configs import Config
 import os
 
 

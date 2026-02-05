@@ -6,7 +6,7 @@ import os
 from typing import List, Optional
 from openai import OpenAI
 from IBench.utils.common import Message
-from IBench.config import ModelConfig
+from IBench.models.model_configs import ModelConfig
 
 class APIModel:
     """API-based model wrapper for Qwen (Dashscope)"""

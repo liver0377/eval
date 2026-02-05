@@ -15,7 +15,7 @@ from IBench.rules.kwargs_extractor import KwargsExtractor
 from IBench.rules.single_rules import SingleRuleRegistry
 from IBench.rules.stage_rules import StageRuleRegistry
 from IBench.utils.common import Message
-from IBench.config import Config
+from IBench.models.model_configs import Config
 
 
 class JsonContextEvaluator:

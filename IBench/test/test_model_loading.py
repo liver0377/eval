@@ -41,28 +41,18 @@ def test_model_loading():
     print("="*60)
     
     try:
-        from IBench.models import get_model_config
+        from IBench.models.model_configs import get_model_config
         from IBench.models.local_model import LocalModel
-        from IBench.config import ModelConfig
         
         # Get model config
         model_config = get_model_config("Qwen3-8B")
         
-        # Create IBench config
-        ibench_config = ModelConfig(
-            local_model_path=model_config.path,
-            load_in_4bit=model_config.load_in_4bit,
-            device_map=model_config.device_map,
-            max_new_tokens=128,  # Short for testing
-            temperature=0.0
-        )
-        
         print(f"\nLoading model: {model_config.name}")
-        print(f"Path: {model_config.path}")
-        print(f"4-bit quantization: {ibench_config.load_in_4bit}")
+        print(f"  Path: {model_config.path}")
+        print(f"4-bit quantization: {model_config.load_in_4bit}")
         
         # Load model
-        model = LocalModel(ibench_config)
+        model = LocalModel(model_config)
         
         print("\n✓ Model loaded successfully!")
         

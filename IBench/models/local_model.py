@@ -9,7 +9,7 @@ import torch
 from typing import Optional, List, Dict, Any
 from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
 from IBench.utils.common import Message
-from IBench.config import ModelConfig
+from IBench.models.model_configs import ModelConfig
 
 class LocalModel:
     """Local model wrapper using HuggingFace Transformers with optimizations"""

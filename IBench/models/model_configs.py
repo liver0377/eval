@@ -2,7 +2,8 @@
 Model Configurations
 Predefined configurations for different models on the server
 """
-from typing import Dict, Any, Optional
+import os
+from typing import Dict, Any, Optional, Union
 from dataclasses import dataclass, field
 
 @dataclass
@@ -16,6 +17,17 @@ class ModelConfig:
     max_new_tokens: int = 512
     temperature: float = 0.0
     description: str = ""
+    
+    # API Configuration for Qwen (Dashscope)
+    api_key: Optional[str] = None
+    api_base: str = "https://dashscope.aliyuncs.com/compatible-mode/v1"
+    user_model_name: str = "qwen-plus"
+    judge_model_name: str = "qwen-max"
+    
+    # Additional generation parameters
+    top_p: float = 0.9
+    repetition_penalty: float = 1.0
+    system_prompt: Optional[str] = None
 
 # Predefined model configurations
 MODEL_REGISTRY: Dict[str, ModelConfig] = {
@@ -118,3 +130,81 @@ def setup_server_models(base_path: str = "/data/wudy/projects/models"):
                 "/data/wudy/projects/models",
                 base_path
             )
+
+
+# ============================================================================
+# Configuration Classes (migrated from config.py)
+# ============================================================================
+
+@dataclass
+class EvaluationConfig:
+    """Evaluation-related configuration"""
+    output_dir: str = "./data/output"
+    batch_size: int = 8
+    max_conversation_turns: int = 20
+    enable_cache: bool = True
+
+
+@dataclass
+class LLMJudgeConfig:
+    """LLM Judge configuration for rule evaluation"""
+    system_prompt: str = """你是一个客观公正的评估者。请根据给定的规则评估模型的回复。
+
+请仔细阅读回复内容，并判断是否违反了规则。
+- 如果违反了规则，返回 "VIOLATED"
+- 如果没有违反规则，返回 "NOT_VIOLATED"
+- 只返回上述两个选项之一，不要返回其他内容。"""
+    
+    max_retries: int = 3
+    timeout: int = 30
+
+
+class Config:
+    """Main configuration class using model_configs.py"""
+    
+    def __init__(self, model_name: str = "Qwen3-8B"):
+        """
+        Initialize configuration
+        
+        Args:
+            model_name: Name of the model to use (must be in MODEL_REGISTRY)
+        """
+        # Get model configuration from registry
+        self.model = get_model_config(model_name)
+        
+        # Evaluation configuration
+        self.evaluation = EvaluationConfig()
+        
+        # LLM Judge configuration
+        self.llm_judge = LLMJudgeConfig()
+        
+        # Load from environment variables if available
+        self._load_from_env()
+    
+    def _load_from_env(self):
+        """Load configuration from environment variables"""
+        if api_key := os.getenv("DASHSCOPE_API_KEY"):
+            self.model.api_key = api_key
+        
+        if api_base := os.getenv("DASHSCOPE_API_BASE"):
+            self.model.api_base = api_base
+        
+        if output_dir := os.getenv("IBENCH_OUTPUT_DIR"):
+            self.evaluation.output_dir = output_dir
+    
+    def validate(self) -> bool:
+        """Validate configuration"""
+        if not self.model.api_key:
+            print("Warning: DASHSCOPE_API_KEY not set. Please set it or pass api_key parameter.")
+            return False
+        
+        if not os.path.exists(self.model.path):
+            print(f"Warning: Local model path {self.model.path} does not exist.")
+            return False
+        
+        os.makedirs(self.evaluation.output_dir, exist_ok=True)
+        return True
+
+
+# Global configuration instance
+config = Config()

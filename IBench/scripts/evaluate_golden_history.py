@@ -16,7 +16,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from IBench.pipeline.json_context_evaluator import JsonContextEvaluator
-from IBench.config import Config
+from IBench.models.model_configs import Config
 
 
 def load_jsonl(file_path: str) -> List[Dict[str, Any]]:
@@ -234,9 +234,10 @@ def evaluate_golden_history_jsonl(
 def main():
     """主函数"""
     # 路径配置
-    jsonl_path = "data/dataset/golden_history_input.jsonl"
-    output_dir = "data/output/golden_history_eval"
-    
+    script_dir = Path(__file__).resolve().parent.parent
+    jsonl_path = script_dir / "data/dataset/golden_history_input.jsonl"
+    output_dir = script_dir / "data/output/golden_history_eval" 
+
     # 检查文件是否存在
     if not os.path.exists(jsonl_path):
         print(f"✗ 错误: 文件不存在: {jsonl_path}")
