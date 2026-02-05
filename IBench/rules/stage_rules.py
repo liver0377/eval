@@ -144,6 +144,13 @@ STAGE_RULES = {
         rule_type=RuleType.LLM,
         description="前N轮以详细讲解成因、后期应对方案及一对一免费建议指导为钩子引导留联",
         score=+1
+    ),
+    19: RuleDefinition(
+        rule_id=19,
+        name="hospital_information",
+        rule_type=RuleType.LLM,
+        description="第N轮提供医院信息",
+        score=+1
     )
 }
 

@@ -105,25 +105,27 @@ class SingleRuleRegistry:
         self,
         rule_name: str,
         response: str,
-        llm_judge: Optional[Callable] = None
+        llm_judge: Optional[Callable] = None,
+        threshold: int = 1
     ) -> tuple[bool, str]:
         """
         Evaluate a single rule
-        
+
         Args:
             rule_name: Rule name (str) to evaluate
             response: Assistant's response
             llm_judge: Optional LLM judge function for LLM-based rules
-            
+            threshold: Threshold value for rules that support it (e.g., multi_question)
+
         Returns:
             Tuple of (passed: bool, reason: str)
         """
         rule = self.get_rule(rule_name)
         if not rule:
             raise ValueError(f"Rule '{rule_name}' not found")
-        
+
         if rule.rule_type == RuleType.RULE:
-            return self._evaluate_rule_based(rule.rule_id, response, rule)
+            return self._evaluate_rule_based(rule.rule_id, response, rule, threshold)
         else:
             if llm_judge is None:
                 raise ValueError(f"LLM judge is required for LLM-based rule '{rule_name}'")
@@ -133,15 +135,19 @@ class SingleRuleRegistry:
         self,
         rule_id: int,
         response: str,
-        rule: RuleDefinition
+        rule: RuleDefinition,
+        threshold: int = 1
     ) -> tuple[bool, str]:
         """Evaluate rule-based rules"""
 
-        # Rule 4: Check for multiple questions (multiple_questions)
-        if rule_id == 4 or rule.name == "multiple_questions":
+        # Rule 4: Check for multiple questions (multi_question)
+        if rule_id == 4 or rule.name == "multi_question":
             question_count = response.count('？') + response.count('?')
-            passed = question_count <= 1
-            return passed, f"{'违规' if not passed else '未违规'}: 发现{question_count}个问号" if not passed else "未违规: 只有一个或零个问号"
+            passed = question_count <= threshold
+            if not passed:
+                return False, f"违规: 发现{question_count}个问题，超过阈值{threshold}"
+            else:
+                return True, f"未违规: 发现{question_count}个问题，未超过阈值{threshold}"
 
         # Rule 7: Check for punctuation used for explanation (punctunation)
         if rule_id == 7 or rule.name == "punctunation":

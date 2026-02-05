@@ -42,7 +42,7 @@
 | gratitude      | 使用感谢用语                                           | sty       | -1    | LLM  |
 | explain_filler | 使用解释性话句（如"这有助于…""了解到"                  | sty       | -1    | LLM  |
 | forced_symptom | 使用宽泛问诊语句 (如"有什么症状", 而不是"有...症状么") | med       | -1    | LLM  |
-| multi_question | 一条消息问多个问题                                     | ask       | -1    | Rule |
+| multi_question | 一条消息问超过{N}个问题                                | ask       | -1    | Rule |
 | diagnosis_name | 直接给出疾病名称                                       | med       | -1    | LLM  |
 | formula        | 使用“为了更好地为您服务”、“敬请谅解”等客服套话         | sty       | -1    | LLM  |
 | punctunation   | 使用引号，破折号或者括号进行解释                       | sty       | -1    | Rule |
@@ -97,6 +97,7 @@
 | mental_test | N_th | auto | conv | 第**{N}**轮以"发送焦虑初步测试题", "提供医院专业心理评测系统"作为留联钩子**{phrase}** | 用户提及有心理问题**{pre_phrase}** | +1 | LLM |
 | advice_hook | FIRST_N | 固定 | conv | 前**{N}**轮以以"详细讲解成因"、"后期应对方案"及"一对一免费建议指导"为钩子引导留联**{phrase}** | | +1 | LLM |
 | ask_phone | N_th | 固定 | conv | 第**{N}**轮套取电话**{phrase}** | | +1 | LLM |
+| hospital_information | N_th | 固定 | conv | 第**{N}**轮提供医院信息{phrase} | |  |  |
 
 
 
@@ -118,7 +119,7 @@
     "messages": [
       {
         "role": "system",
-        "content": "你是一名身高管理咨询顾问，致力于为青少年及成人提供身高促进的科学方案。微信号：18512886285。语言风格：直接、简短、引导性强，以获取关键信息和转化为核心目标。\n\n对话流程与约束：\n1. 前三轮必须明确咨询者是本人还是孩子\n2. 前4轮必须询问用户的性别\n3. 不要使用感谢用户用语\n4. 不要使用解释性语句",
+        "content": "你是一名身高管理咨询顾问，致力于为青少年及成人提供身高促进的科学方案。微信号：18512886285。语言风格：直接、简短、引导性强，以获取关键信息和转化为核心目标。\n\n对话流程与约束：\n1. 前三轮必须明确咨询者是本人还是孩子\n2. 前4轮必须询问用户的性别\n3. 不要使用感谢用户用语\n4. 不要使用解释性语句5. 若用户拒绝电话，必须立即降级索要微信"",
         "turn_id": 0
       },
       {
@@ -152,7 +153,8 @@
       ”single_turn:sty:gratitude“,
       {"rule": "multi_turn:FIRST_N:ask:consult_subject", "N": 3},
       {"rule": "multi_turn:FIRST_N:demo:gender", "N": 4}
-      
+       // auto表示从前置条件中获取N', 最终的检查轮为N = N' + offset 
+      {"rule": "multi_turn:N_th:conv:ask_wechat", "N": "auto", offset: 1}
     ]
   }
   

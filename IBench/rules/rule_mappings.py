@@ -61,9 +61,14 @@ RULE_MAPPINGS = {
         "score": -1,
         "has_kwargs": True,
         "kwargs_schema": {
+            "N": {
+                "type": "int",
+                "description": "问题数量阈值，超过N个问题算违规",
+                "default": 1
+            },
             "q_cnt": {
                 "type": "int",
-                "description": "问题数量",
+                "description": "实际问题数量",
                 "default": 0
             }
         }
@@ -512,6 +517,23 @@ RULE_MAPPINGS = {
             "phrase": {
                 "type": "string",
                 "description": "建议钩子相关语句（详细讲解成因、后期应对方案、一对一免费建议指导）",
+                "default": ""
+            }
+        }
+    },
+
+    "multi_turn:N_th:conv:hospital_information": {
+        "type": "stage_turn",
+        "rule_class": "N_th",
+        "rule_id": 19,
+        "rule_name": "hospital_information",
+        "score": +1,
+        "n_source": "fixed",
+        "has_kwargs": True,
+        "kwargs_schema": {
+            "phrase": {
+                "type": "string",
+                "description": "提供的医院信息相关语句",
                 "default": ""
             }
         }

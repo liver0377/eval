@@ -275,10 +275,14 @@ class JsonContextEvaluator:
         """评估单个规则（single_turn）"""
         # 根据规则类型选择评估方式
         if parsed_rule.type == "single_turn":
+            # 获取阈值N，默认为1
+            threshold = parsed_rule.N if parsed_rule.N is not None else 1
+
             triggered, reason = self.single_rule_registry.evaluate_rule(
                 rule_name=parsed_rule.rule_name,
                 response=response,
-                llm_judge=self._get_llm_judge_func()
+                llm_judge=self._get_llm_judge_func(),
+                threshold=threshold
             )
         else:  # stage_turn
             triggered, reason = self.stage_rule_registry.evaluate_rule(
