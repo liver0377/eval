@@ -43,9 +43,10 @@ class Message:
 class RuleResult:
     """Result of single rule evaluation"""
     rule_id: int
+    rule_name: str
     rule_type: RuleType
     rule_description: str
-    passed: bool
+    triggered: bool  # 规则是否被触发（替代passed字段）
     score: int
     reason: str
     turn_id: int
@@ -56,7 +57,7 @@ class RuleResult:
             "rule_id": self.rule_id,
             "rule_type": self.rule_type.value,
             "rule_description": self.rule_description,
-            "passed": self.passed,
+            "triggered": self.triggered,
             "score": self.score,
             "reason": self.reason,
             "turn_id": self.turn_id
@@ -74,17 +75,17 @@ class TurnEvaluation:
     def total_score(self) -> int:
         """Calculate total score for this turn"""
         all_rules = self.single_rules + self.stage_rules
-        return sum(rule.score for rule in all_rules if not rule.passed)
+        return sum(rule.score for rule in all_rules if rule.triggered)
     
     @property
-    def passed_single_rules(self) -> int:
-        """Count passed single rules"""
-        return sum(1 for rule in self.single_rules if rule.passed)
+    def triggered_single_rules(self) -> int:
+        """Count triggered single rules"""
+        return sum(1 for rule in self.single_rules if rule.triggered)
     
     @property
-    def passed_stage_rules(self) -> int:
-        """Count passed stage rules"""
-        return sum(1 for rule in self.stage_rules if rule.passed)
+    def triggered_stage_rules(self) -> int:
+        """Count triggered stage rules"""
+        return sum(1 for rule in self.stage_rules if rule.triggered)
     
     def to_dict(self) -> Dict:
         """Convert to dictionary"""
@@ -136,6 +137,7 @@ class EvaluationResult:
 class RuleDefinition:
     """Definition of a rule"""
     rule_id: int
+    name: str
     rule_type: RuleType
     description: str
     score: int

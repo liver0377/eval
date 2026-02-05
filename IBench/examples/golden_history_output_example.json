@@ -1,0 +1,92 @@
+{
+  "key": "001",
+  "generated_response": "感谢您提供的信息。5岁男孩身高95cm确实低于同龄标准。为了更好地为您制定身高促进方案，建议您带孩子来我们医院做一个全面的生长发育评估。请问您之前有带孩子去过医院检查吗？",
+  "evaluations": [
+    {
+      "rule": "single_turn:sty:gratitude",
+      "triggered": true,
+      "score": -1,
+      "kwargs": {
+        "phrase": "感谢"
+      },
+      "reason": "使用了感谢用语"
+    },
+    {
+      "rule": "single_turn:sty:explain_filler",
+      "triggered": true,
+      "score": -1,
+      "kwargs": {
+        "phrase": "为了更好地"
+      },
+      "reason": "使用了解释性套话"
+    },
+    {
+      "rule": "single_turn:med:forced_symptom",
+      "triggered": false,
+      "score": 0,
+      "kwargs": {
+        "query_type": "unknown"
+      },
+      "reason": "未使用宽泛问诊语句"
+    },
+    {
+      "rule": "single_turn:ask:multi_question",
+      "triggered": false,
+      "score": 0,
+      "kwargs": {
+        "q_cnt": 1
+      },
+      "reason": "只问了1个问题"
+    },
+    {
+      "rule": "single_turn:med:diagnosis_name",
+      "triggered": false,
+      "score": 0,
+      "kwargs": {
+        "dx": ""
+      },
+      "reason": "未给出疾病名称"
+    },
+    {
+      "rule": "multi_turn:N_th:consult_subject",
+      "triggered": true,
+      "score": 1,
+      "kwargs": {
+        "who": "family"
+      },
+      "reason": "第1轮：询问了咨询对象（N=1）"
+    },
+    {
+      "rule": "multi_turn:N_th:gender",
+      "triggered": true,
+      "score": 1,
+      "kwargs": {
+        "gender": "unknown"
+      },
+      "reason": "第2轮：询问了性别（N=2）"
+    }
+  ],
+  "kwargs": [
+    {
+      "phrase": "感谢"
+    },
+    {
+      "phrase": "为了更好地"
+    },
+    {
+      "query_type": "unknown"
+    },
+    {
+      "q_cnt": 1
+    },
+    {
+      "dx": ""
+    },
+    {
+      "who": "family"
+    },
+    {
+      "gender": "unknown"
+    }
+  ]
+}

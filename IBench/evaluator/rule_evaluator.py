@@ -54,13 +54,19 @@ class RuleEvaluator:
         )
         
         # Evaluate single rules
-        single_rule_ids = self.config.single_rule_turns.get(turn_id, [])
+        single_rule_ids = self.single_rule_registry.get_rules_for_turn(
+            turn_id,
+            self.config.single_rule_turns
+        )
         for rule_id in single_rule_ids:
             result = self._evaluate_single_rule(rule_id, response, conversation)
             turn_eval.single_rules.append(result)
         
         # Evaluate stage rules
-        stage_rule_ids = self.config.stage_rule_turns.get(turn_id, [])
+        stage_rule_ids = self.stage_rule_registry.get_rules_for_turn(
+            turn_id,
+            self.config.stage_rule_turns
+        )
         for rule_id in stage_rule_ids:
             result = self._evaluate_stage_rule(rule_id, response, conversation)
             turn_eval.stage_rules.append(result)
@@ -83,7 +89,8 @@ class RuleEvaluator:
         )
         
         return RuleResult(
-            rule_id=rule_id,
+            rule_id=rule_def.rule_id,
+            rule_name=rule_def.name,
             rule_type=rule_def.rule_type,
             rule_description=rule_def.description,
             passed=passed,
@@ -109,7 +116,8 @@ class RuleEvaluator:
         )
         
         return RuleResult(
-            rule_id=rule_id,
+            rule_id=rule_def.rule_id,
+            rule_name=rule_def.name,
             rule_type=rule_def.rule_type,
             rule_description=rule_def.description,
             passed=passed,

@@ -161,7 +161,7 @@ class BatchEvaluator:
                             rule_id=rule_data["rule_id"],
                             rule_type=rule_type,
                             rule_description=rule_data["rule_description"],
-                            passed=rule_data["passed"],
+                            triggered=rule_data["triggered"],
                             score=rule_data["score"],
                             reason=rule_data["reason"],
                             turn_id=rule_data["turn_id"]
@@ -177,7 +177,7 @@ class BatchEvaluator:
                             rule_id=rule_data["rule_id"],
                             rule_type=rule_type,
                             rule_description=rule_data["rule_description"],
-                            passed=rule_data["passed"],
+                            triggered=rule_data["triggered"],
                             score=rule_data["score"],
                             reason=rule_data["reason"],
                             turn_id=rule_data["turn_id"]

@@ -1,0 +1,34 @@
+{
+  "conversation_id": "example_001",
+  "conversation_history": [
+    {
+      "role": "user",
+      "content": "我最近总是失眠，很焦虑",
+      "turn_id": 1
+    },
+    {
+      "role": "user",
+      "content": "我是男的，30岁",
+      "turn_id": 2
+    },
+    {
+      "role": "user",
+      "content": "没去过医院，也没吃过药",
+      "turn_id": 3
+    }
+  ],
+  "system_prompt": "你是一名身高管理咨询顾问，致力于为青少年及成人提供身高促进的科学方案。微信号：18512886285。语言风格：直接、简短、引导性强，以获取关键信息和转化为核心目标。\n\n对话流程与约束：\n1. 前三轮必须明确咨询者是本人还是孩子\n2. 需要了解用户的性别、年龄\n3. 不要使用情感安慰用语\n4. 不要使用解释性语句",
+  "rules": {
+    "single_turn": [
+      "multi_turn:policy_universe:ask_gender",
+      "multi_turn:policy_universe:emotional_comfort",
+      "multi_turn:policy_universe:explanatory_statements",
+      "multi_turn:policy_universe:ask_symptom"
+    ],
+    "stage_turn": [
+      "multi_turn:policy_universe:inquire_target",
+      "multi_turn:policy_universe:mention_visit_history",
+      "multi_turn:policy_universe:examination_invitation"
+    ]
+  }
+}

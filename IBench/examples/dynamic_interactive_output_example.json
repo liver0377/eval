@@ -1,0 +1,71 @@
+{
+  "key": "001",
+  "evaluations": {
+    "0": {
+      "turn_id": 0,
+      "response": "您好，这里是专业身高管理中心，请问您是为谁咨询的呢？是孩子本人还是其他家属？",
+      "rules": [
+        {
+          "rule_tag": "single_turn:sty:gratitude",
+          "triggered": false,
+          "score": 0,
+          "kwargs": {}
+        },
+        {
+          "rule_tag": "single_turn:sty:explain_filler",
+          "triggered": false,
+          "score": 0,
+          "kwargs": {}
+        },
+        {
+          "rule_tag": "single_turn:med:forced_symptom",
+          "triggered": false,
+          "score": 0,
+          "kwargs": {}
+        },
+        {
+          "rule_tag": "single_turn:ask:multi_question",
+          "triggered": false,
+          "score": 0,
+          "kwargs": {
+            "q_cnt": 1
+          }
+        },
+        {
+          "rule_tag": "multi_turn:N_th:consult_subject",
+          "triggered": true,
+          "score": 1,
+          "kwargs": {
+            "who": "family"
+          }
+        }
+      ]
+    },
+    "1": {
+      "turn_id": 1,
+      "response": "请问孩子是男孩还是女孩？现在的身高是多少呢？",
+      "rules": [
+        {
+          "rule_tag": "single_turn:ask:multi_question",
+          "triggered": true,
+          "score": -1,
+          "kwargs": {
+            "q_cnt": 2
+          }
+        },
+        {
+          "rule_tag": "multi_turn:N_th:gender",
+          "triggered": true,
+          "score": 1,
+          "kwargs": {
+            "gender": "unknown"
+          }
+        }
+      ]
+    }
+  },
+  "summary": {
+    "total_score": 1,
+    "total_turns": 5
+  }
+}

@@ -78,19 +78,19 @@ class EvaluationConfig:
     def __post_init__(self):
         if self.single_rule_turns is None:
             self.single_rule_turns = {
-                1: [1, 2, 3, 4, 5, 6],
-                2: [1, 2, 3, 4, 5, 6],
-                3: [1, 2, 3, 4, 5, 6]
+                1: ["emotional_comfort", "explanatory_statements", "symptom_inquiry", "multiple_questions", "disease_diagnosis"],
+                2: ["emotional_comfort", "explanatory_statements", "symptom_inquiry", "multiple_questions", "disease_diagnosis"],
+                3: ["emotional_comfort", "explanatory_statements", "symptom_inquiry", "multiple_questions", "disease_diagnosis"]
             }
         
         if self.stage_rule_turns is None:
             self.stage_rule_turns = {
-                1: [1],
-                3: [2, 3],
-                4: [4],
-                8: [5, 6, 7],
-                10: [5, 6, 7],
-                12: [5, 6, 7]
+                1: ["inquire_consultation_target"],
+                3: ["mention_visit_history", "examination_invitation"],
+                4: ["inquire_gender"],
+                8: ["collect_phone_medication", "collect_phone_complication", "collect_phone_expert_interpretation"],
+                10: ["collect_phone_medication", "collect_phone_complication", "collect_phone_expert_interpretation"],
+                12: ["collect_phone_medication", "collect_phone_complication", "collect_phone_expert_interpretation"]
             }
 
 @dataclass
