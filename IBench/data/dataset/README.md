@@ -5,7 +5,8 @@
 本目录包含两个黄金历史评估数据集：
 
 1. **dataset_20_items.json** - 原始数据集，包含20个测试用例
-2. **test_cases_80_items.jsonl** - 新增数据集，包含80个测试用例（基于20条系统提示词生成）
+2. **golden_history_input.jsonl** - 新增数据集，包含80个测试用例（基于20条系统提示词生成）
+   - 位于: `data/dataset/golden_history_input.jsonl`
 
 两个数据集覆盖所有8个单轮规则和16个阶段规则。
 
@@ -16,8 +17,8 @@
 - `generate_golden_history_dataset.py` - 生成原始数据集的脚本
 
 ### 新增数据集
-- `test_cases_80_items.jsonl` - 基于系统提示词生成的80个测试用例（JSONL格式）
-- `generate_80_test_cases.py` - 生成80个测试用例的脚本
+- `data/dataset/golden_history_input.jsonl` - 基于系统提示词生成的80个测试用例（JSONL格式）
+- `scripts/generate_80_test_cases.py` - 生成80个测试用例的脚本
 
 ### 文档
 - `README.md` - 本说明文件
@@ -74,9 +75,11 @@
 - 阶段规则测试（007-015）
 - 组合和边界测试（016-020）
 
-### test_cases_80_items.jsonl（新增数据集）
+### golden_history_input.jsonl（新增数据集）
 
 **概述**: 基于20条真实系统提示词生成的80个测试用例，每条提示词生成4个不同场景的测试用例。
+
+**文件位置**: `data/dataset/golden_history_input.jsonl`
 
 **特点**:
 - 使用真实系统提示词作为system消息
@@ -225,9 +228,9 @@ print(f"\nAverage Score: {avg_score:.2f}")
 import json
 from IBench.pipeline.json_context_evaluator import JsonContextEvaluator
 
-# 加载JSONL数据集
+# 加载80个测试用例
 test_cases = []
-with open('test_cases_80_items.jsonl', 'r', encoding='utf-8') as f:
+with open('data/dataset/golden_history_input.jsonl', 'r', encoding='utf-8') as f:
     for line in f:
         test_cases.append(json.loads(line))
 
@@ -477,9 +480,9 @@ python scripts/generate_golden_history_dataset.py
 | 029 | 测试组合-新单轮规则组合 | formula, punctunation, list |
 | 030 | 测试综合-所有新规则 | 所有新增规则 |
 
-**注意**：上述建议的测试用例已在 `test_cases_80_items.jsonl` 数据集中实现。该数据集包含80个测试用例，完整覆盖了所有8个单轮规则和16个阶段规则，包括所有新增规则。
+**注意**：上述建议的测试用例已在 `golden_history_input.jsonl` 数据集中实现。该数据集包含80个测试用例，完整覆盖了所有8个单轮规则和16个阶段规则，包括所有新增规则。
 
-## test_cases_80_items.jsonl 规则覆盖统计
+## golden_history_input.jsonl 规则覆盖统计
 
 ### 测试用例分布
 

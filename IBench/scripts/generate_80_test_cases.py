@@ -441,11 +441,12 @@ def main():
     # 生成测试用例
     test_cases = generate_all_test_cases()
 
-    # 保存为JSONL到golden_history_dataset目录
+    # 保存为JSONL到data/dataset目录
     script_dir = Path(__file__).parent
-    output_dir = script_dir.parent / "examples" / "golden_history_dataset"
+    project_root = script_dir.parent
+    output_dir = project_root / "data" / "dataset"
     output_dir.mkdir(parents=True, exist_ok=True)
-    output_path = str(output_dir / "test_cases_80_items.jsonl")
+    output_path = str(output_dir / "golden_history_input.jsonl")
     save_to_jsonl(test_cases, output_path)
 
     # 统计信息

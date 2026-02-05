@@ -18,8 +18,8 @@ IBench 提供两种评估模式，满足不同的评估需求：
 - **黄金历史评估**：给定完整对话上下文，生成并评估最后一条回复
 - **动态交互评估**：评估已有的完整对话记录，支持FIRST_N和N_th规则
 - **灵活的规则系统**：
-  - 5条单轮规则（风格、提问、医疗边界）
-  - 11条阶段规则（咨询、转化、范围控制等）
+  - 8条单轮规则（风格、提问、医疗边界）
+  - 16条阶段规则（咨询、转化、范围控制等）
   - 支持FIRST_N（前N轮至少触发一次）和N_th（第N轮必须触发）规则类型
 - **混合评估方式**：支持基于规则的自动评估和基于LLM的智能评估
 - **参数自动提取**：使用LLM自动提取kwargs并写入评估结果
@@ -39,7 +39,7 @@ evaluator = JsonContextEvaluator(api_key="your-api-key")
 
 # 从JSON文件评估
 result = evaluator.evaluate_from_json(
-    input_json_path="examples/golden_history_input_example.json",
+    input_json_path="examples/datasets/golden_history_input_example.json",
     output_json_path="data/output/result.json"
 )
 
@@ -76,7 +76,7 @@ evaluator = DynamicInteractiveEvaluator(api_key="your-api-key")
 
 # 从JSON文件评估
 result = evaluator.evaluate_from_json(
-    input_json_path="examples/dynamic_interactive_input_example.json",
+    input_json_path="examples/datasets/dynamic_interactive_input_example.json",
     output_json_path="data/output/result.json"
 )
 
@@ -96,7 +96,7 @@ export DASHSCOPE_API_KEY="your-api-key"
 
 ```bash
 # 测试 IBench 核心功能
-python IBench/scripts/quick_test.py
+python test/quick_test.py
 ```
 
 ### 2. 安装依赖
@@ -110,7 +110,7 @@ pip install torch transformers openai bitsandbytes accelerate
 
 ```bash
 # 在服务器上测试
-python IBench/scripts/test_model_loading.py
+python test/test_model_loading.py
 ```
 
 ### 4. 配置环境变量
@@ -228,16 +228,6 @@ multi_turn:{FIRST_N|N_th}:{rule_name}
 
 ```
 IBench/
-├── config.py                           # 配置管理
-├── models/                             # 模型加载器
-│   ├── local_model.py                 # 本地模型（HuggingFace）
-│   └── api_model.py                   # API模型（Dashscope）
-├── rules/                              # 规则定义和评估
-│   ├── single_rules.py                # 单轮规则（5条）
-│   ├── stage_rules.py                 # 阶段规则（11条）
-│   ├── dynamic_rule_registry.py       # 动态规则注册器
-│   ├── rule_mappings.py               # 规则映射配置
-│   └── kwargs_extractor.py            # 参数提取器
 ├── conversation/                       # 对话管理
 │   ├── conversation.py                # 对话上下文管理
 │   └── user_simulator.py              # 用户模拟器
@@ -247,16 +237,44 @@ IBench/
 ├── pipeline/                           # 评估流程
 │   ├── json_context_evaluator.py      # 黄金历史评估器 ⭐
 │   └── dynamic_interactive_eval.py    # 动态交互评估器 ⭐
-├── utils/                              # 工具模块
-│   └── common.py                      # 通用数据结构
-├── examples/                           # 示例和测试
-│   ├── golden_history_input_example.json      # 黄金历史评估输入示例
-│   ├── golden_history_output_example.json     # 黄金历史评估输出示例
-│   ├── dynamic_interactive_input_example.json  # 动态交互评估输入示例
-│   └── dynamic_interactive_output_example.json # 动态交互评估输出示例
+├── rules/                              # 规则定义
+│   ├── single_rules.py                # 单轮规则（8条）
+│   ├── stage_rules.py                 # 阶段规则（16条）
+│   ├── rule_mappings.py               # 规则映射配置
+│   └── dynamic_rule_registry.py       # 动态规则注册
+├── models/                             # 模型接口
+│   ├── api_model.py                   # API模型
+│   ├── local_model.py                 # 本地模型
+│   └── model_configs.py               # 模型配置
+├── test/                               # 测试目录
+│   ├── test_rule_names.py             # 规则名称测试
+│   ├── quick_test.py                  # 快速测试
+│   └── test_dynamic_eval.py           # 动态评估测试
+├── scripts/                            # 工具脚本
+│   ├── generate_80_test_cases.py      # 生成测试用例
+│   ├── generate_golden_history_dataset.py  # 生成数据集
+│   └── batch_evaluate_golden_history.py    # 批量评估
+├── examples/                           # 示例和数据集
+│   ├── datasets/                      # 数据集文件
+│   │   ├── golden_history_input_example.json
+│   │   ├── golden_history_output_example.json
+│   │   └── dynamic_interactive_input_example.json
+│   ├── golden_history_dataset/        # 黄金历史数据集
+│   │   ├── dataset_20_items.json      # 20个测试用例
+│   │   └── README.md                  # 数据集说明
+│   └── usage/                         # 使用示例
+│       ├── json_evaluator_example.py
+│       └── system_prompt_example.py
+├── data/                               # 数据目录
+│   └── dataset/                        # 数据集
+│       └── golden_history_input.jsonl  # 80个测试用例
 ├── docs/                               # 文档
 │   ├── 评估Bench.md                   # 评估规则详细说明
-│   └── 评估体系说明.md                # 评估体系完整说明
+│   ├── 评估体系说明.md                # 评估体系完整说明
+│   ├── system_prompts_collection.md   # 系统提示词集合
+│   └── PROJECT_STRUCTURE.md           # 项目结构说明
+├── utils/                              # 工具模块
+│   └── common.py                      # 通用数据结构
 └── deprecated/                         # 已废弃的评估器
     ├── context_eval.py                # 旧的环境历史评估器
     ├── interactive_eval.py            # 旧的动态交互评估器
@@ -273,10 +291,15 @@ IBench/
 - **[deprecated/README.md](deprecated/README.md)** - 已废弃评估器的迁移指南
 
 ### 示例文件
-- `examples/golden_history_input_example.json` - 黄金历史评估输入示例
-- `examples/golden_history_output_example.json` - 黄金历史评估输出示例
-- `examples/dynamic_interactive_input_example.json` - 动态交互评估输入示例
-- `examples/dynamic_interactive_output_example.json` - 动态交互评估输出示例
+- `examples/datasets/golden_history_input_example.json` - 黄金历史评估输入示例
+- `examples/datasets/golden_history_output_example.json` - 黄金历史评估输出示例
+- `examples/datasets/dynamic_interactive_input_example.json` - 动态交互评估输入示例
+- `examples/datasets/dynamic_interactive_output_example.json` - 动态交互评估输出示例
+
+### 数据集
+- `data/dataset/golden_history_input.jsonl` - 80个测试用例
+- `examples/golden_history_dataset/dataset_20_items.json` - 20个测试用例
+- [数据集说明](examples/golden_history_dataset/README.md)
 
 ## ⚠️ 重要变更
 

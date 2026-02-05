@@ -139,7 +139,7 @@ def main():
     """主函数"""
     # 路径配置
     dataset_path = "examples/golden_history_dataset/dataset_20_items.json"
-    output_dir = "examples/golden_history_dataset/eval_results"
+    output_dir = "data/output/eval_results"
 
     # 检查数据集文件是否存在
     if not os.path.exists(dataset_path):
