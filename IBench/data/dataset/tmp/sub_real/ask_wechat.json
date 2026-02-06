@@ -64,7 +64,7 @@
         {
             "rule": "multi_turn:N_th:conv:ask_wechat",
             "N": "auto",
-            "offset": 1
+            "offset": 0 
         },
         {
             "rule": "multi_turn:FIRST_N:med:visit_history",

@@ -74,7 +74,7 @@
         {
             "rule": "multi_turn:N_th:conv:final_detainment",
             "N": "auto",
-            "offset": 1
+            "offset": 0 
         },
         {
             "rule": "multi_turn:FIRST_N:conv:leave",

@@ -237,17 +237,18 @@ def resolve_dynamic_N(
         return None
     
     # Case 2: "auto" 模式
-    offset = 1  # 默认 offset
-    
+    offset = 0  # 默认 offset（precondition满足的那一轮）
+
     if isinstance(N_config, str):
         if N_config == "auto":
-            offset = 1
+            offset = 0  # 保持默认值
         else:
             raise ValueError(f"不支持的 N 值: {N_config}")
     elif isinstance(N_config, dict):
         if N_config.get("value") != "auto":
             raise ValueError(f"不支持的 N 值: {N_config}")
-        offset = N_config.get("offset", 1)
+        # 使用 dict 中指定的 offset，如果未指定则使用默认值 0
+        offset = N_config.get("offset", 0)
     else:
         raise ValueError(f"不支持的 N 值类型: {type(N_config)}")
     
@@ -291,8 +292,14 @@ def find_precondition_turn(
     
     # 跳过 system 消息
     start_idx = 1 if messages[0].role == "system" else 0
-    max_turns = (len(messages) - start_idx) // 2
-    
+
+    # 考虑最后一条单独的 user 消息（Golden History 评估场景）
+    # 如果最后一条是 user，说明有一轮未完成，应该计入 max_turns
+    if messages[-1].role == "user":
+        max_turns = (len(messages) - start_idx + 1) // 2
+    else:
+        max_turns = (len(messages) - start_idx) // 2
+
     for turn_id in range(1, max_turns + 1):
         # 获取该轮的 user 消息
         user_idx = start_idx + 2 * (turn_id - 1)
@@ -312,10 +319,13 @@ def find_precondition_turn(
 """
         
         try:
-            response = llm_judge_func(user_message, prompt)
+            result = llm_judge_func(user_message, prompt)
             
-            if response and "YES" in response.upper():
-                return turn_id
+            # result 是 tuple[bool, str]，解包获取响应文本
+            if result and isinstance(result, tuple) and len(result) >= 2:
+                response_text = result[1]  # 获取第二个元素（reason）
+                if "YES" in response_text.upper():
+                    return turn_id
         except Exception as e:
             print(f"⚠ 警告: 检测 precondition 时出错: {e}")
             continue
