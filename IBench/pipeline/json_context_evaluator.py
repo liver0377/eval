@@ -124,6 +124,16 @@ class JsonContextEvaluator:
         generated_response = self.local_model.generate(messages)
         print(f"✓ 生成回复: {generated_response[:50]}...")
 
+        # 5. 将生成的回复添加到 messages 中（供 multi_turn 规则评估使用）
+        messages.append(
+            Message(
+                role="assistant",
+                content=generated_response,
+                turn_id=messages[-1].turn_id if messages else 0
+            )
+        )
+        print(f"✓ 已将生成回复添加到对话历史（用于 multi_turn 规则评估）")
+
         # 5. 评估规则
         print("Evaluating rules...")
         evaluations = []
@@ -363,25 +373,14 @@ class JsonContextEvaluator:
         max_turns = (len(messages) - start_idx) // 2
 
         if assistant_idx >= len(messages):
-            # 区分两种情况
-            if assistant_idx == len(messages) and messages[-1].role == "user":
-                # 特殊情况：N指向即将生成的回复（Golden History 场景）
-                print(f"ℹ️  信息: 规则 N={resolved_N} 指向即将生成的回复，跳过该规则")
-                return {
-                    "triggered": False,
-                    "score": 0,
-                    "kwargs": {},
-                    "reason": f"规则 N={resolved_N} 指向即将生成的回复，历史中不存在"
-                }
-            else:
-                # 真正的超出范围
-                print(f"⚠ 警告: 计算的 N={resolved_N} 超出范围（实际{max_turns}轮），跳过该规则")
-                return {
-                    "triggered": False,
-                    "score": 0,
-                    "kwargs": {},
-                    "reason": f"N={resolved_N} 超出范围，对话仅有{max_turns}轮"
-                }
+            # 真正的超出范围（因为生成的回复已经添加到 messages 中了）
+            print(f"⚠ 警告: 计算的 N={resolved_N} 超出范围（实际{max_turns}轮），跳过该规则")
+            return {
+                "triggered": False,
+                "score": 0,
+                "kwargs": {},
+                "reason": f"N={resolved_N} 超出范围，对话仅有{max_turns}轮"
+            }
         
         target_message = messages[assistant_idx]
         
