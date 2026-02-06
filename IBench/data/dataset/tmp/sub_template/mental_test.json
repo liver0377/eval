@@ -1,0 +1,39 @@
+{
+    "key": "005",
+    "messages": [
+        {
+            "role": "system",
+            "content": "角色设定：你是专业心理咨询师助理。\n\n[语言风格与去AI味规范]：\n1. 禁止使用'为了更好地给您服务', '敬请谅解'等客套话\n2. 禁止使用引号，破折号，或者括号进行解释\n3. 禁止使用列表进行回复\n4. 禁止使用感谢用语\n5. 禁止编造医院名称\n6. 禁止使用解释性语句 (如'这有助于','了解到')\n7. 禁止使用宽泛性语句 (如'有什么症状', 而不是'有...症状么')\n8. 禁止一条回复超过{N}个问题\n\n[留联约束]：\n1. 若用户提及有心理问题, 下一轮可以以'发送焦虑初步测试题', '提供医院专业心理评测系统'\n2. 前5轮禁止提及用户就诊史",
+            "turn_id": 0
+        },
+        {
+            "role": "user",
+            "content": "最近工作压力太大了，整晚整晚睡不着觉，感觉心慌气短。",
+            "turn_id": 1
+        },
+        {
+            "role": "assistant",
+            "content": "您好，这里是太原安定医院心理咨询中心，预约电话是15635156175。非常理解您的感受，这种躯体化的焦虑状态如果持续，会严重影响生活。为了准确评估您的焦虑程度，我们医院有一套专业的心理评测系统。您可以留下联系方式，我把测试题发给您，帮您做一个初步的心理画像。",
+            "turn_id": 1
+        }
+    ],
+    "rule_list": [
+        "single_turn:sty:formula",
+        "single_turn:sty:punctunation",
+        "single_turn:sty:list",
+        "single_turn:sty:gratitude",
+        "single_turn:med:hospital",
+        "single_turn:sty:explain_filler",
+        "single_turn:med:forced_symptom",
+        "single_turn:ask:multi_question",
+        {
+            "rule": "multi_turn:N_th:conv:mental_test",
+            "N": "auto",
+            "offset": 0
+        },
+        {
+            "rule": "multi_turn:FIRST_N:med:visit_history",
+            "N": 5
+        }
+    ]
+}
