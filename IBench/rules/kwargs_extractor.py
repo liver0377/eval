@@ -43,51 +43,38 @@ class KwargsExtractor:
         """
         # 根据规则名称选择提取方法
         extractor_map = {
-            # 单轮规则
+            # ========== 单轮规则 (9条) ==========
             "single_turn:sty:gratitude": self._extract_phrase,
             "single_turn:sty:explain_filler": self._extract_phrase,
+            "single_turn:sty:formula": self._extract_phrase,
+            "single_turn:sty:punctuation": self._extract_phrase,
+            "single_turn:sty:list": self._extract_format,
             "single_turn:med:forced_symptom": self._extract_query_type,
-            "single_turn:ask:multi_question": self._extract_q_cnt,
             "single_turn:med:diagnosis_name": self._extract_dx,
+            "single_turn:med:hospital": self._extract_hospital_name,
+            "single_turn:ask:multi_question": self._extract_q_cnt,
             
-            # 阶段规则 - FIRST_N
-            "multi_turn:FIRST_N:consult_subject": self._extract_who,
-            "multi_turn:FIRST_N:visit_history": self._extract_phrase,
-            "multi_turn:FIRST_N:test_invite": self._extract_phrase,
-            "multi_turn:FIRST_N:gender": self._extract_gender,
-            "multi_turn:FIRST_N:medication_phone": self._extract_phrase,
-            "multi_turn:FIRST_N:complication_phone": self._extract_disease,
-            "multi_turn:FIRST_N:expert_phone": self._extract_phrase,
-            "multi_turn:FIRST_N:primary_only": self._extract_main_disease,
-            "multi_turn:FIRST_N:prompt_question": self._extract_prompt,
-            "multi_turn:FIRST_N:report_phone": self._extract_phrase,
-            "multi_turn:FIRST_N:advice_phone": self._extract_phrase,
+            # ========== 阶段规则 - FIRST_N (12条) ==========
+            "multi_turn:FIRST_N:ask:consult_subject": self._extract_who,
+            "multi_turn:FIRST_N:ask:prompt_question": self._extract_prompt,
+            "multi_turn:FIRST_N:med:visit_history": self._extract_phrase_with_pre,
+            "multi_turn:FIRST_N:med:test_invite": self._extract_phrase_with_pre,
+            "multi_turn:FIRST_N:demo:gender": self._extract_gender,
+            "multi_turn:FIRST_N:scope:primary_only": self._extract_main_disease,
+            "multi_turn:FIRST_N:conv:complication_phone": self._extract_disease_with_age,
+            "multi_turn:FIRST_N:conv:expert_phone": self._extract_phrase_with_pre,
+            "multi_turn:FIRST_N:conv:advice_hook": self._extract_phrase,
+            "multi_turn:FIRST_N:conv:leave": self._extract_phrase,
+            "multi_turn:FIRST_N:sty:net_limit": self._extract_phrase,
             
-            # 阶段规则 - N_th
-            "multi_turn:N_th:consult_subject": self._extract_who,
-            "multi_turn:N_th:visit_history": self._extract_phrase,
-            "multi_turn:N_th:test_invite": self._extract_phrase,
-            "multi_turn:N_th:gender": self._extract_gender,
-            "multi_turn:N_th:medication_phone": self._extract_phrase,
-            "multi_turn:N_th:complication_phone": self._extract_disease,
-            "multi_turn:N_th:expert_phone": self._extract_phrase,
-            "multi_turn:N_th:primary_only": self._extract_main_disease,
-            "multi_turn:N_th:prompt_question": self._extract_prompt,
-            "multi_turn:N_th:report_phone": self._extract_phrase,
-            "multi_turn:N_th:advice_phone": self._extract_phrase,
-            
-            # 兼容旧格式
-            "multi_turn:policy_universe:ask_gender": self._extract_gender,
-            "multi_turn:policy_universe:inquire_target": self._extract_who,
-            "multi_turn:policy_universe:emotional_comfort": self._extract_emotion_type,
-            "multi_turn:policy_universe:ask_symptom": self._extract_symptoms,
-            "multi_turn:policy_universe:disease_diagnosis": self._extract_disease,
-            "multi_turn:policy_universe:examination_invitation": self._extract_examination_type,
-            "multi_turn:policy_universe:collect_phone_medication": self._extract_medication_info,
-            "multi_turn:policy_universe:collect_phone_complication": self._extract_complication_type,
-            "multi_turn:policy_universe:collect_phone_expert_interpretation": self._extract_expert_type,
-            "multi_turn:policy_universe:mention_visit_history": self._extract_visit_mentioned,
-            "multi_turn:policy_universe:explanatory_statements": self._extract_explanation_detected,
+            # ========== 阶段规则 - N_th (8条) ==========
+            "multi_turn:N_th:conv:medication_phone": self._extract_phrase_with_pre,
+            "multi_turn:N_th:conv:report_phone": self._extract_phrase_with_pre,
+            "multi_turn:N_th:conv:ask_phone": self._extract_phrase,
+            "multi_turn:N_th:conv:ask_wechat": self._extract_phrase_with_pre,
+            "multi_turn:N_th:conv:final_detainment": self._extract_phrase_with_pre,
+            "multi_turn:N_th:conv:hospital_information": self._extract_phrase,
+            "multi_turn:N_th:conv:mental_test": self._extract_phrase_with_pre,
         }
 
         extractor = extractor_map.get(rule_full_name)
@@ -161,6 +148,39 @@ class KwargsExtractor:
             return {'prompt': 'main_question'}
         return {'prompt': 'open'}
     
+    def _extract_format(self, response: str, conversation: List[Message]) -> dict:
+        """提取列表格式"""
+        list_patterns = ['1.', '2.', '3.', '一、', '二、', '三、', '①', '②', '③']
+        format_found = ''
+        for pattern in list_patterns:
+            if pattern in response:
+                format_found = pattern
+                break
+        return {'format': format_found}
+    
+    def _extract_hospital_name(self, response: str, conversation: List[Message]) -> dict:
+        """提取编造的医院名称"""
+        hospital_keywords = ['医院', '诊所', '中心', '门诊']
+        for keyword in hospital_keywords:
+            if keyword in response:
+                return {'name': f'包含"{keyword}"的医院名称'}
+        return {'name': ''}
+    
+    def _extract_phrase_with_pre(self, response: str, conversation: List[Message]) -> dict:
+        """提取关键短语（包含前置短语）"""
+        return {
+            'phrase': response[:100],
+            'pre_phrase': ''
+        }
+    
+    def _extract_disease_with_age(self, response: str, conversation: List[Message]) -> dict:
+        """提取疾病名称（包含年龄阈值）"""
+        disease_keywords = ['高血压', '糖尿病', '心脏病', '脑梗', '中风']
+        for disease in disease_keywords:
+            if disease in response:
+                return {'disease': disease, 'age': 60}
+        return {'disease': '', 'age': 60}
+    
     # ========== 保留旧方法以兼容 ==========
     
     def _extract_gender(self, response: str, conversation: List[Message]) -> dict:
@@ -175,150 +195,3 @@ class KwargsExtractor:
             return {'gender': 'female'}
         return {'gender': 'unknown'}
     
-    def _extract_target(self, response: str, conversation: List[Message]) -> dict:
-        """
-        Extract consultation target (self/family)
-
-        Returns: {'target': 'self'/'family'/'unknown'}
-        """
-        return self._extract_who(response, conversation)
-    
-    def _extract_emotion_type(self, response: str, conversation: List[Message]) -> dict:
-        """
-        Extract emotion comfort type
-
-        Returns: {'emotion_type': string}
-        """
-        emotion_keywords = {
-            '安慰': '安慰',
-            '担心': '宽慰',
-            '别担心': '宽慰',
-            '不用怕': '鼓励',
-            '理解': '共情',
-        }
-
-        for keyword, emotion_type in emotion_keywords.items():
-            if keyword in response:
-                return {'emotion_type': emotion_type}
-
-        return {'emotion_type': ''}
-    
-    def _extract_symptoms(self, response: str, conversation: List[Message]) -> dict:
-        """
-        Extract symptoms asked in response
-
-        Returns: {'symptoms_asked': list}
-        """
-        symptoms = []
-
-        symptom_keywords = [
-            '失眠', '头痛', '发烧', '咳嗽', '疼痛', '乏力',
-            '恶心', '呕吐', '腹泻', '便秘', '头晕'
-        ]
-
-        for symptom in symptom_keywords:
-            if symptom in response:
-                symptoms.append(symptom)
-
-        return {'symptoms_asked': symptoms}
-    
-    def _extract_disease(self, response: str, conversation: List[Message]) -> dict:
-        """
-        Extract mentioned disease name
-
-        Returns: {'disease_mentioned': string}
-        """
-        return self._extract_dx(response, conversation)
-    
-    def _extract_examination_type(self, response: str, conversation: List[Message]) -> dict:
-        """
-        Extract examination invitation type
-
-        Returns: {'examination_type': string}
-        """
-        exam_keywords = {
-            '体检': '体检',
-            '检查': '检查',
-            '化验': '化验',
-            '测试': '测试',
-            '诊断': '诊断'
-        }
-
-        for keyword, exam_type in exam_keywords.items():
-            if keyword in response:
-                return {'examination_type': exam_type}
-
-        return {'examination_type': ''}
-    
-    def _extract_medication_info(self, response: str, conversation: List[Message]) -> dict:
-        """
-        Extract medication-related information
-
-        Returns: {'medication_mentioned': bool, 'phone_collected': bool}
-        """
-        medication_keywords = ['药', '吃药', '服药', '药物', '用药']
-        phone_keywords = ['电话', '联系方式', '微信', '手机']
-
-        medication_mentioned = any(kw in response for kw in medication_keywords)
-        phone_collected = any(kw in response for kw in phone_keywords)
-
-        return {
-            'medication_mentioned': medication_mentioned,
-            'phone_collected': phone_collected
-        }
-    
-    def _extract_complication_type(self, response: str, conversation: List[Message]) -> dict:
-        """
-        Extract complication type mentioned
-
-        Returns: {'complication_type': string}
-        """
-        complication_keywords = {
-            '并发症': '并发症',
-            '后遗症': '后遗症',
-            '副作用': '副作用',
-            '不良反应': '不良反应'
-        }
-
-        for keyword, comp_type in complication_keywords.items():
-            if keyword in response:
-                return {'complication_type': comp_type}
-
-        return {'complication_type': ''}
-    
-    def _extract_expert_type(self, response: str, conversation: List[Message]) -> dict:
-        """
-        Extract expert interpretation type
-
-        Returns: {'expert_type': string}
-        """
-        if '专家' in response:
-            return {'expert_type': '专家'}
-        elif '医生' in response:
-            return {'expert_type': '医生'}
-        elif '真人' in response:
-            return {'expert_type': '真人'}
-
-        return {'expert_type': ''}
-    
-    def _extract_visit_mentioned(self, response: str, conversation: List[Message]) -> dict:
-        """
-        Extract whether visit history was mentioned
-
-        Returns: {'visit_mentioned': bool}
-        """
-        visit_keywords = ['去过医院', '看过医生', '就诊', '医院', '检查过']
-        visit_mentioned = any(kw in response for kw in visit_keywords)
-
-        return {'visit_mentioned': visit_mentioned}
-    
-    def _extract_explanation_detected(self, response: str, conversation: List[Message]) -> dict:
-        """
-        Extract whether explanatory statements were detected
-
-        Returns: {'explanation_detected': bool}
-        """
-        explanation_keywords = ['这有助于', '了解到', '说明', '因为', '由于']
-        explanation_detected = any(kw in response for kw in explanation_keywords)
-
-        return {'explanation_detected': explanation_detected}

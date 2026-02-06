@@ -360,29 +360,6 @@ RULE_MAPPINGS = {
             }
         }
     },
-    
-    "multi_turn:FIRST_N:conv:advice_phone": {
-        "type": "stage_turn",
-        "rule_class": "FIRST_N",
-        "rule_id": 11,
-        "rule_name": "advice_phone",
-        "score": +1,
-        "n_source": "fixed",
-        "precondition": "用户正在服药并寻求建议",
-        "has_kwargs": True,
-        "kwargs_schema": {
-            "phrase": {
-                "type": "string",
-                "description": "详细沟通进而给出用药建议相关语句",
-                "default": ""
-            },
-            "pre_phrase": {
-                "type": "string",
-                "description": "前置正在服药并寻求建议相关短语",
-                "default": ""
-            }
-        }
-    },
 
     "multi_turn:FIRST_N:conv:leave": {
         "type": "stage_turn",

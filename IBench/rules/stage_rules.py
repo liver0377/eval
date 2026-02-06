@@ -187,7 +187,8 @@ class StageRuleRegistry:
         rule_name: str,
         response: str,
         llm_judge: Optional[Callable] = None,
-        conversation: Optional[list[Message]] = None
+        conversation: Optional[list[Message]] = None,
+        N: Optional[int] = None
     ) -> tuple[bool, str]:
         """
         Evaluate a stage rule
@@ -197,6 +198,7 @@ class StageRuleRegistry:
             response: Assistant's response
             llm_judge: Optional LLM judge function for LLM-based rules
             conversation: Full conversation context for precondition checking
+            N: Optional N value for dynamic description
             
         Returns:
             Tuple of (passed: bool, reason: str)
@@ -214,7 +216,7 @@ class StageRuleRegistry:
         else:
             if llm_judge is None:
                 raise ValueError(f"LLM judge is required for LLM-based rule '{rule_name}'")
-            return self._evaluate_llm_based(rule, response, llm_judge, conversation)
+            return self._evaluate_llm_based(rule, response, llm_judge, conversation, N=N)
     
     def _check_precondition(self, rule: RuleDefinition, conversation: Optional[list[Message]], llm_judge=None) -> bool:
         """
@@ -287,7 +289,8 @@ class StageRuleRegistry:
         rule: RuleDefinition,
         response: str,
         llm_judge: Callable,
-        conversation: Optional[list[Message]] = None
+        conversation: Optional[list[Message]] = None,
+        N: Optional[int] = None
     ) -> tuple[bool, str]:
         """
         Evaluate LLM-based rules
@@ -297,15 +300,26 @@ class StageRuleRegistry:
             response: Response text
             llm_judge: LLM judge function
             conversation: Full conversation context
+            N: Optional N value for dynamic description
             
         Returns:
             Tuple of (passed, reason)
         """
+        # 获取动态描述（如果提供了N值）
+        if N is not None:
+            dynamic_description = self.get_description_with_N(
+                rule.name,
+                N=N,
+                rule_class=getattr(rule, 'rule_class', None)
+            )
+        else:
+            dynamic_description = rule.description
+        
         context_str = ""
         if conversation:
             context_str = "\n".join([f"{msg.role}: {msg.content}" for msg in conversation])
         
-        return llm_judge(response, rule.description, context_str)
+        return llm_judge(response, dynamic_description, context_str)
     
     def get_rules_for_turn(self, turn_id: int, rule_mapping: dict) -> list[int]:
         """
@@ -325,3 +339,99 @@ class StageRuleRegistry:
             if rule_id:
                 rule_ids.append(rule_id)
         return rule_ids
+    
+    def get_description_with_N(
+        self, 
+        rule_name: str, 
+        N: Optional[int] = None,
+        rule_class: Optional[str] = None
+    ) -> str:
+        """
+        获取动态规则描述（支持N值替换）
+        
+        Args:
+            rule_name: 规则名称（不含前缀）
+            N: 可选的N值
+            rule_class: 规则类别 ("FIRST_N" 或 "N_th")
+        
+        Returns:
+            动态规则描述
+        """
+        # 1. 获取基础规则定义
+        rule = self.get_rule(rule_name)
+        if not rule:
+            return ""
+        
+        # 2. 构建完整规则名
+        rule_full_name = self._build_full_rule_name(rule_name, rule_class)
+        
+        # 3. 使用描述管理器获取详细描述
+        try:
+            from IBench.rules.rule_description_manager import get_description_manager
+            
+            manager = get_description_manager()
+            return manager.get_description(
+                rule_full_name,
+                rule.description,
+                N=N
+            )
+        except Exception as e:
+            # 降级：使用基础描述
+            if N is not None and "N" in rule.description:
+                return rule.description.replace("N", str(N))
+            return rule.description
+    
+    def _build_full_rule_name(
+        self, 
+        rule_name: str, 
+        rule_class: Optional[str] = None
+    ) -> str:
+        """
+        构建完整规则名
+        
+        Args:
+            rule_name: 规则名称（如 "consult_subject"）
+            rule_class: 规则类别 (FIRST_N 或 N_th)
+        
+        Returns:
+            完整规则名（如 "multi_turn:FIRST_N:ask:consult_subject"）
+        """
+        # 根据 rule_name 查找 category
+        category_map = {
+            "consult_subject": "ask",
+            "visit_history": "med",
+            "test_invite": "med",
+            "gender": "demo",
+            "medication_phone": "conv",
+            "complication_phone": "conv",
+            "expert_phone": "conv",
+            "primary_only": "scope",
+            "prompt_question": "ask",
+            "report_phone": "conv",
+            "leave": "conv",
+            "ask_wechat": "conv",
+            "final_detainment": "conv",
+            "net_limit": "sty",
+            "mental_test": "conv",
+            "advice_hook": "conv",
+            "ask_phone": "conv",
+            "hospital_information": "conv",
+        }
+        
+        category = category_map.get(rule_name, "conv")
+        
+        # 如果没有提供 rule_class，使用默认值
+        if rule_class is None:
+            # 从 rule 的 rule_id 推断默认的 rule_class
+            default_class_map = {
+                5: "N_th",   # medication_phone
+                10: "N_th",  # report_phone
+                13: "N_th",  # ask_wechat
+                14: "N_th",  # final_detainment
+                16: "N_th",  # mental_test
+                17: "N_th",  # ask_phone
+                19: "N_th",  # hospital_information
+            }
+            rule_class = default_class_map.get(rule.rule_id, "FIRST_N")
+        
+        return f"multi_turn:{rule_class}:{category}:{rule_name}"

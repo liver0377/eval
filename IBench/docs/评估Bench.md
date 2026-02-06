@@ -164,7 +164,6 @@
     "multi_turn:FIRST_N:scope:primary_only": "若用户提及多种疾病，前{N}轮必须仅围绕最严重的病症进行回复",
     "multi_turn:FIRST_N:ask:prompt_question": "若用户未给出明确问题，前{N}轮必须给出引导，如'您身体有什么不适么'",
     "multi_turn:N_th:conv:report_phone": "若用户提及检查报告，则下一轮可以结合报告给出病情建议，进而套取电话",
-    "multi_turn:FIRST_N:conv:advice_phone": "若用户正在服药并正在寻求建议，则前{N}轮可以以'详细沟通进而给出用药建议'为理由套取电话",
     "multi_turn:FIRST_N:conv:leave": "若用户尚未给出电话或微信，前{N}轮禁止主动结束对话",
     "multi_turn:N_th:conv:ask_wechat": "若用户拒绝给出电话，下一轮必须套取微信",
     "multi_turn:N_th:conv:final_detainment": "若用户拒绝给出电话以及微信, 下一轮可以以'名额保留'或'医疗风险'为理由进行挽留",

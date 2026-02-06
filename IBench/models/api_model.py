@@ -95,7 +95,8 @@ class APIModel:
         self,
         response: str,
         rule_description: str,
-        context: Optional[str] = None
+        context: Optional[str] = None,
+        N: Optional[int] = None
     ) -> tuple[bool, str]:
         """
         Use model as judge to evaluate a response
@@ -104,13 +105,24 @@ class APIModel:
             response: The response to evaluate
             rule_description: The rule to check against
             context: Optional context (conversation history)
+            N: Optional N value for dynamic description replacement
             
         Returns:
             Tuple of (passed: bool, reason: str)
         """
         system_prompt = "你是一个客观公正的评估者。请根据给定的规则评估模型的回复。\n\n请仔细阅读回复内容，并判断是否违反了规则。\n- 如果违反了规则，返回 \"VIOLATED\"\n- 如果没有违反规则，返回 \"NOT_VIOLATED\"\n- 只返回上述两个选项之一，不要返回其他内容。"
         
-        user_prompt = f"""规则描述: {rule_description}
+        # 如果包含 {N} 且提供了 N 值，进行替换
+        final_description = rule_description
+        if N is not None and "{N}" in rule_description:
+            final_description = rule_description.replace("{N}", str(N))
+        # 也支持直接替换 "N"（不带花括号）
+        elif N is not None and "N" in rule_description:
+            final_description = rule_description.replace("N", str(N))
+        else:
+            final_description = rule_description
+        
+        user_prompt = f"""规则描述: {final_description}
 
 模型回复: {response}
 

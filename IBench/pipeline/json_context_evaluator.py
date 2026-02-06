@@ -277,19 +277,22 @@ class JsonContextEvaluator:
         if parsed_rule.type == "single_turn":
             # 获取阈值N，默认为1
             threshold = parsed_rule.N if parsed_rule.N is not None else 1
-
+ 
             triggered, reason = self.single_rule_registry.evaluate_rule(
                 rule_name=parsed_rule.rule_name,
                 response=response,
                 llm_judge=self._get_llm_judge_func(),
-                threshold=threshold
+                threshold=threshold,
+                N=parsed_rule.N
             )
         else:  # stage_turn
+            # 对于 single_turn 触发的 stage_turn 规则，传递 N 值
             triggered, reason = self.stage_rule_registry.evaluate_rule(
                 rule_name=parsed_rule.rule_name,
                 response=response,
                 llm_judge=self._get_llm_judge_func(),
-                conversation=conversation
+                conversation=conversation,
+                N=parsed_rule.N
             )
 
         # 提取kwargs
@@ -382,12 +385,13 @@ class JsonContextEvaluator:
         print(f"  评估multi_turn规则: {parsed_rule.full_name}, N={resolved_N}")
         print(f"  目标回复（第{resolved_N}轮）: {target_response[:50]}...")
         
-        # 使用stage rule registry评估该回复
+        # 使用stage rule registry评估该回复（传递 resolved_N）
         triggered, reason = self.stage_rule_registry.evaluate_rule(
             rule_name=parsed_rule.rule_name,
             response=target_response,
             llm_judge=self._get_llm_judge_func(),
-            conversation=messages[:assistant_idx+1]  # 传入该轮及之前的对话上下文
+            conversation=messages[:assistant_idx+1],
+            N=resolved_N  # 传递实际的 N 值
         )
 
         # 提取kwargs

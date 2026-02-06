@@ -143,6 +143,31 @@ class RuleDefinition:
     score: int
     precondition: Optional[str] = None
     
+    def get_description(self, N: Optional[int] = None) -> str:
+        """
+        获取格式化的规则描述
+        
+        Args:
+            N: 可选的N值，用于替换描述中的占位符
+        
+        Returns:
+            格式化后的规则描述
+        """
+        # 如果没有N值，直接返回基础描述
+        if N is None:
+            return self.description
+        
+        # 如果描述中包含 {N} 占位符，进行替换
+        if "{N}" in self.description:
+            return self.description.replace("{N}", str(N))
+        
+        # 如果描述中包含 N（不带花括号），也进行替换
+        if "N" in self.description and "{N}" not in self.description:
+            # 简单替换 "前N轮" → "前3轮"
+            return self.description.replace("N", str(N))
+        
+        return self.description
+    
     def to_dict(self) -> Dict:
         """Convert to dictionary"""
         return {

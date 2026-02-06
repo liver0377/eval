@@ -106,30 +106,32 @@ class SingleRuleRegistry:
         rule_name: str,
         response: str,
         llm_judge: Optional[Callable] = None,
-        threshold: int = 1
+        threshold: int = 1,
+        N: Optional[int] = None
     ) -> tuple[bool, str]:
         """
         Evaluate a single rule
-
+ 
         Args:
             rule_name: Rule name (str) to evaluate
             response: Assistant's response
             llm_judge: Optional LLM judge function for LLM-based rules
             threshold: Threshold value for rules that support it (e.g., multi_question)
-
+            N: Optional N value for dynamic description
+ 
         Returns:
             Tuple of (passed: bool, reason: str)
         """
         rule = self.get_rule(rule_name)
         if not rule:
             raise ValueError(f"Rule '{rule_name}' not found")
-
+ 
         if rule.rule_type == RuleType.RULE:
             return self._evaluate_rule_based(rule.rule_id, response, rule, threshold)
         else:
             if llm_judge is None:
                 raise ValueError(f"LLM judge is required for LLM-based rule '{rule_name}'")
-            return self._evaluate_llm_based(rule, response, llm_judge)
+            return self._evaluate_llm_based(rule, response, llm_judge, N=N)
     
     def _evaluate_rule_based(
         self,
@@ -177,7 +179,8 @@ class SingleRuleRegistry:
         self,
         rule: RuleDefinition,
         response: str,
-        llm_judge: Callable
+        llm_judge: Callable,
+        N: Optional[int] = None
     ) -> tuple[bool, str]:
         """
         Evaluate LLM-based rules
@@ -186,11 +189,18 @@ class SingleRuleRegistry:
             rule: Rule definition
             response: Response text
             llm_judge: LLM judge function (response, rule_description) -> (passed, reason)
-            
+            N: Optional N value for dynamic description
+        
         Returns:
             Tuple of (passed, reason)
         """
-        return llm_judge(response, rule.description)
+        # 获取动态描述（如果提供了N值）
+        if N is not None:
+            dynamic_description = self.get_description_with_N(rule.name, N=N)
+        else:
+            dynamic_description = rule.description
+        
+        return llm_judge(response, dynamic_description)
     
     def get_rules_for_turn(self, turn_id: int, rule_mapping: dict) -> list[int]:
         """
@@ -210,3 +220,64 @@ class SingleRuleRegistry:
             if rule_id:
                 rule_ids.append(rule_id)
         return rule_ids
+    
+    def get_description_with_N(self, rule_name: str, N: Optional[int] = None) -> str:
+        """
+        获取动态规则描述（支持N值替换）
+        
+        Args:
+            rule_name: 规则名称（不含前缀）
+            N: 可选的N值
+        
+        Returns:
+            动态规则描述
+        """
+        # 1. 获取基础规则定义
+        rule = self.get_rule(rule_name)
+        if not rule:
+            return ""
+        
+        # 2. 构建完整规则名
+        rule_full_name = self._build_full_rule_name(rule_name)
+        
+        # 3. 使用描述管理器获取详细描述
+        try:
+            from IBench.rules.rule_description_manager import get_description_manager
+            
+            manager = get_description_manager()
+            return manager.get_description(
+                rule_full_name,
+                rule.description,
+                N=N
+            )
+        except Exception as e:
+            # 降级：使用基础描述
+            if N is not None and ("{N}" in rule.description or "N" in rule.description):
+                return rule.description.replace("N", str(N))
+            return rule.description
+    
+    def _build_full_rule_name(self, rule_name: str) -> str:
+        """
+        构建完整规则名
+        
+        Args:
+            rule_name: 规则名称（如 "gratitude"）
+        
+        Returns:
+            完整规则名（如 "single_turn:sty:gratitude"）
+        """
+        # 根据 rule_name 查找 category
+        category_map = {
+            "gratitude": "sty",
+            "explain_filler": "sty",
+            "forced_symptom": "med",
+            "multi_question": "ask",
+            "diagnosis_name": "med",
+            "formula": "sty",
+            "punctuation": "sty",
+            "list": "sty",
+            "hospital": "med",
+        }
+        
+        category = category_map.get(rule_name, "sty")
+        return f"single_turn:{category}:{rule_name}"
