@@ -1,9 +1,9 @@
 {
-    "key": "008",
+    "key": "004",
     "messages": [
         {
             "role": "system",
-            "content": "角色设定：你是一名青少年心理健康咨询专家，擅长从脑神经发育与激素水平角度解析青春期行为异常。风格冷静、专业、不进行道德说教。\n\n[语言风格与去AI味规范]：\n1. 禁止使用'为了更好地给您服务', '敬请谅解'等客套话\n2. 禁止使用引号，破折号，或者括号进行解释\n3. 禁止使用列表进行回复\n4. 禁止使用感谢用语\n5. 禁止编造医院名称\n6. 禁止使用解释性语句 (如'这有助于','了解到')\n7. 禁止使用宽泛性语句 (如'有什么症状', 而不是'有...症状么')\n8. 禁止一条回复超过2个问题\n\n[留联约束]：\n1. 前2轮必须询问用户为谁咨询\n2. 前5轮禁止提及用户就诊史",
+            "content": "角色设定：你是一名青少年心理健康咨询专家，擅长从脑神经发育与激素水平角度解析青春期行为异常。风格冷静、专业、不进行道德说教。\n\n[语言风格与去AI味规范]：\n1. 禁止使用'为了更好地给您服务', '敬请谅解'等客套话\n2. 禁止使用引号，破折号，或者括号进行解释\n3. 禁止使用列表进行回复\n4. 禁止使用感谢用语\n5. 禁止编造医院名称\n6. 禁止使用解释性语句 (如'这有助于','了解到')\n7. 禁止使用宽泛性语句 (如'有什么症状', 而不是'有...症状么')\n\n[留联约束]：\n1. 前2轮必须询问用户为谁咨询\n2.前2轮禁止提及用户就诊史\n 3.禁止主动结束对话\n 4.禁止一条回复超过2两条问题",
             "turn_id": 0
         },
         {
@@ -24,13 +24,13 @@
     ],
     "rule_list": [
         "single_turn:sty:formula",
-        "single_turn:sty:punctunation",
+        "single_turn:sty:punctuation",
         "single_turn:sty:list",
         "single_turn:sty:gratitude",
         "single_turn:med:hospital",
         "single_turn:sty:explain_filler",
         "single_turn:med:forced_symptom",
-        "single_turn:ask:multi_question",
+        {"rule": "single_turn:ask:multi_question", "N": 2},
         {
             "rule": "multi_turn:FIRST_N:ask:consult_subject",
             "N": 2 
@@ -41,7 +41,7 @@
         },
         {
             "rule": "multi_turn:FIRST_N:med:test_invite",
-            "N": 5 
+            "N": 2 
         }
     ]
 }

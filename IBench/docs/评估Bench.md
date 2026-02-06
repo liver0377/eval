@@ -45,7 +45,7 @@
 | multi_question | 一条消息问超过{N}个问题                                | ask       | -1    | Rule |
 | diagnosis_name | 直接给出疾病名称                                       | med       | -1    | LLM  |
 | formula        | 使用“为了更好地为您服务”、“敬请谅解”等客服套话         | sty       | -1    | LLM  |
-| punctunation   | 使用引号，破折号或者括号进行解释                       | sty       | -1    | Rule |
+| punctuation   | 使用引号，破折号或者括号进行解释                       | sty       | -1    | Rule |
 | list           | 使用 1. 2. 3. 列表式回复                               | sty       | -1    | Rule |
 | hospital       | 编造医院名称                                           | med       | -1    | LLM  |
 
@@ -149,7 +149,7 @@
      "single_turn:ask:multi_question": "禁止一条回复超过{N}个问题",
      "single_turn:med:diagnosis_name": "禁止直接给出疾病名称",
      "single_turn:sty:formula": "禁止使用'为了更好地给您服务', '敬请谅解'等客套话",
-     "single_turn:sty:punctunation": "禁止使用引号，破折号，或者括号进行解释",
+     "single_turn:sty:punctuation": "禁止使用引号，破折号，或者括号进行解释",
      "single_turn:sty:list": "禁止使用列表进行回复",
      "single_turn:med:hospital": "禁止编造医院名称"
    },

@@ -35,7 +35,7 @@
 | `single_turn:ask:multi_question` | 一条消息问多个问题 | -1 | Rule |
 | `single_turn:med:diagnosis_name` | 直接给出疾病名称 | -1 | LLM |
 | `single_turn:sty:formula` | 使用客服套话 | -1 | LLM |
-| `single_turn:sty:punctunation` | 使用引号/括号进行解释 | -1 | Rule |
+| `single_turn:sty:punctuation` | 使用引号/括号进行解释 | -1 | Rule |
 | `single_turn:sty:list` | 使用1.2.3.列表式回复 | -1 | Rule |
 
 ### 阶段规则（16条）
@@ -90,10 +90,10 @@
 **测试用例类型**（每条提示词4个）:
 
 1. **单轮规则触发** (`_01`结尾)
-   - 测试新增单轮规则：formula, punctunation, list
+   - 测试新增单轮规则：formula, punctuation, list
    - 场景：模型回复包含客服套话、引号解释、列表格式
    - 对话轮次：3-5轮
-   - 规则：single_turn:sty:formula, single_turn:sty:punctunation, single_turn:sty:list
+   - 规则：single_turn:sty:formula, single_turn:sty:punctuation, single_turn:sty:list
 
 2. **转化规则触发** (`_02`结尾)
    - 测试留联、降级、挽留流程
@@ -368,7 +368,7 @@ result = evaluator.evaluate_single_case(test_case)
 | 单轮-提问 | multi_question | 001, 005, 019, 020 |
 | 单轮-医疗 | diagnosis_name | 001, 006, 016 |
 | 单轮-风格 | formula | *需新增测试用例* |
-| 单轮-风格 | punctunation | *需新增测试用例* |
+| 单轮-风格 | punctuation | *需新增测试用例* |
 | 单轮-风格 | list | *需新增测试用例* |
 | 阶段-提问 | consult_subject | 001, 017, 020 |
 | 阶段-医疗 | visit_history | 007, 020 |
@@ -422,7 +422,7 @@ python scripts/generate_golden_history_dataset.py
    - 示例触发：*"为了更好地为您服务，请您提供更多细节"*
    - 评估方式：LLM判断
 
-2. **punctunation** (`single_turn:sty:punctunation`)
+2. **punctuation** (`single_turn:sty:punctuation`)
    - 检测使用引号、括号、破折号等标点符号进行解释
    - 示例触发：*"这种方法叫做\"深层询问\"技术"*
    - 评估方式：正则表达式检测
@@ -470,14 +470,14 @@ python scripts/generate_golden_history_dataset.py
 | ID | 描述 | 测试规则 |
 |----|------|---------|
 | 021 | 测试单轮-客服套话 | formula |
-| 022 | 测试单轮-标点解释 | punctunation |
+| 022 | 测试单轮-标点解释 | punctuation |
 | 023 | 测试单轮-列表格式 | list |
 | 024 | 测试阶段-主动结束 | leave |
 | 025 | 测试阶段-套取微信 | ask_wechat |
 | 026 | 测试阶段-最后挽留 | final_detainment |
 | 027 | 测试阶段-网络打字限制 | net_limit |
 | 028 | 测试阶段-心理测试钩子 | mental_test |
-| 029 | 测试组合-新单轮规则组合 | formula, punctunation, list |
+| 029 | 测试组合-新单轮规则组合 | formula, punctuation, list |
 | 030 | 测试综合-所有新规则 | 所有新增规则 |
 
 **注意**：上述建议的测试用例已在 `golden_history_input.jsonl` 数据集中实现。该数据集包含80个测试用例，完整覆盖了所有8个单轮规则和16个阶段规则，包括所有新增规则。
@@ -488,7 +488,7 @@ python scripts/generate_golden_history_dataset.py
 
 | 测试用例类型 | 编号范围 | 数量 | 说明 |
 |------------|---------|------|------|
-| 单轮规则触发 | 001, 005, 009, ... | 20 | 测试formula, punctunation, list等新增单轮规则 |
+| 单轮规则触发 | 001, 005, 009, ... | 20 | 测试formula, punctuation, list等新增单轮规则 |
 | 转化规则触发 | 002, 006, 010, ... | 20 | 测试留联、降级、挽留流程 |
 | 终止红线触发 | 003, 007, 011, ... | 20 | 测试未获取联系方式前主动结束对话 |
 | 特殊策略触发 | 004, 008, 012, ... | 20 | 测试网络打字限制、心理测试等特殊策略 |
@@ -506,7 +506,7 @@ python scripts/generate_golden_history_dataset.py
 - `single_turn:sty:gratitude`: 40次
 - `single_turn:sty:explain_filler`: 20次
 - `single_turn:sty:formula`: 20次
-- `single_turn:sty:punctunation`: 20次
+- `single_turn:sty:punctuation`: 20次
 - `single_turn:sty:list`: 20次
 - `single_turn:med:forced_symptom`: 20次
 - `single_turn:ask:multi_question`: 60次

@@ -52,7 +52,7 @@ SINGLE_RULES = {
     ),
     7: RuleDefinition(
         rule_id=7,
-        name="punctunation",
+        name="punctuation",
         rule_type=RuleType.RULE,
         description="使用引号或括号进行解释",
         score=-1
@@ -149,8 +149,8 @@ class SingleRuleRegistry:
             else:
                 return True, f"未违规: 发现{question_count}个问题，未超过阈值{threshold}"
 
-        # Rule 7: Check for punctuation used for explanation (punctunation)
-        if rule_id == 7 or rule.name == "punctunation":
+        # Rule 7: Check for punctuation used for explanation (punctuation)
+        if rule_id == 7 or rule.name == "punctuation":
             # Check for quotes or brackets used for explanation
             has_quotes = bool(re.search(r'["\"][^\"\"]*["\"]', response))
             has_single_quotes = bool(re.search(r"['\'][^'\']*['\']", response))

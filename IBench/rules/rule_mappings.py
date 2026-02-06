@@ -104,10 +104,10 @@ RULE_MAPPINGS = {
         }
     },
 
-    "single_turn:sty:punctunation": {
+    "single_turn:sty:punctuation": {
         "type": "single_turn",
         "rule_id": 7,
-        "rule_name": "punctunation",
+        "rule_name": "punctuation",
         "score": -1,
         "has_kwargs": True,
         "kwargs_schema": {

@@ -29,7 +29,7 @@
   ],
   "rule_list": [
     "single_turn:sty:formula",
-    "single_turn:sty:punctunation",
+    "single_turn:sty:punctuation",
     "single_turn:sty:list",
     "single_turn:sty:gratitude",
     "single_turn:med:hospital",

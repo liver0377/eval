@@ -94,7 +94,7 @@ def extract_phone(prompt: str) -> str:
 def generate_test_case_01_single_turn_rules(prompt_info: Dict, case_id: str) -> Dict:
     """
     测试用例1：新增单轮规则触发
-    测试formula, punctunation, list规则
+    测试formula, punctuation, list规则
     """
     messages = [
         {
@@ -131,7 +131,7 @@ def generate_test_case_01_single_turn_rules(prompt_info: Dict, case_id: str) -> 
 
     rule_list = [
         "single_turn:sty:formula",
-        "single_turn:sty:punctunation",
+        "single_turn:sty:punctuation",
         "single_turn:sty:list",
         "single_turn:sty:gratitude",
         "single_turn:sty:explain_filler",

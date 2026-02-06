@@ -6,7 +6,7 @@
      "single_turn:ask:multi_question": "禁止一条回复超过{N}个问题",
      "single_turn:med:diagnosis_name": "禁止直接给出疾病名称",
      "single_turn:sty:formula": "禁止使用'为了更好地给您服务', '敬请谅解'等客套话",
-     "single_turn:sty:punctunation": "禁止使用引号，破折号，或者括号进行解释",
+     "single_turn:sty:punctuation": "禁止使用引号，破折号，或者括号进行解释",
      "single_turn:sty:list": "禁止使用列表进行回复",
      "single_turn:med:hospital": "禁止编造医院名称"
    },
