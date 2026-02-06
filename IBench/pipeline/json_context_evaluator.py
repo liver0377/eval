@@ -356,11 +356,16 @@ class JsonContextEvaluator:
         # 第N轮的assistant消息索引
         # user1(start_idx), assistant1(start_idx+1), user2(start_idx+2), assistant2(start_idx+3)...
         # 第N轮的assistant在: start_idx + 2*N - 1
-        
+
         assistant_idx = start_idx + 2 * resolved_N - 1
-        
-        max_turns = (len(messages) - start_idx) // 2
-        
+
+        # 考虑最后一条单独的 user 消息（Golden History 评估场景）
+        # 如果最后一条是 user，说明有一轮未完成，应该计入 max_turns
+        if messages[-1].role == "user":
+            max_turns = (len(messages) - start_idx + 1) // 2
+        else:
+            max_turns = (len(messages) - start_idx) // 2
+
         if assistant_idx >= len(messages):
             print(f"⚠ 警告: 计算的 N={resolved_N} 超出范围（实际{max_turns}轮），跳过该规则")
             return {
