@@ -4,47 +4,43 @@
 
 这个测试脚本用于验证 IBench 的黄金历史评估（Golden History Evaluation）pipeline 是否正常工作。
 
+**要求**：
+- ✅ 必须配置 API key（DASHSCOPE_API_KEY 或 OPENAI_API_KEY）
+- ✅ 使用真实的 API model 进行评估
+- ✅ 从 `golden_history_input.jsonl` 读取第一行作为测试数据
+
 ## 🚀 快速开始
 
-### 1. 无需 API key 的快速测试（Mock 模式）
+### 1. 设置 API key
 
 ```bash
-python test_golden_history_pipeline.py
-```
-
-这将：
-- 从 `golden_history_input.jsonl` 读取第一行作为测试数据
-- 使用 Mock evaluator 进行测试（不调用真实 API）
-- 验证 pipeline 的基本流程是否正常
-
-### 2. 使用真实 API 进行完整测试
-
-```bash
-# 设置 API key（Linux/Mac）
+# Linux/Mac
 export DASHSCOPE_API_KEY='your-api-key'
 
 # 或者使用 OpenAI API
 export OPENAI_API_KEY='your-api-key'
 
-# 运行测试
-python test_golden_history_pipeline.py
+# Windows
+set DASHSCOPE_API_KEY=your-api-key
 ```
 
-这将：
-- 使用真实的 API 模型生成回复
-- 使用真实的 Judge LLM 进行评估
-- 输出完整的评估结果
+### 2. 运行测试
+
+```bash
+python test_golden_history_pipeline.py
+```
 
 ## 📊 测试内容
 
 测试脚本会验证以下功能：
 
 1. ✅ **数据读取**：从 JSONL 文件读取测试数据
-2. ✅ **评估器初始化**：初始化 JsonContextEvaluator
-3. ✅ **回复生成**：使用模型生成最后一条回复
-4. ✅ **规则评估**：评估所有规则（single_turn 和 multi_turn）
-5. ✅ **{N} 替换**：验证 {N} 占位符是否正确替换
-6. ✅ **结果输出**：保存评估结果到 JSON 文件
+2. ✅ **API key 检查**：验证环境变量中是否配置了 API key
+3. ✅ **评估器初始化**：初始化 JsonContextEvaluator（使用 API model）
+4. ✅ **回复生成**：使用 API model 生成最后一条回复
+5. ✅ **规则评估**：评估所有规则（single_turn 和 multi_turn）
+6. ✅ **{N} 替换**：验证 {N} 占位符是否正确替换
+7. ✅ **结果输出**：保存评估结果到 JSON 文件
 
 ## 📁 输入输出
 
@@ -85,59 +81,48 @@ python test_golden_history_pipeline.py
 
 ## 📋 预期输出
 
-### Mock 模式输出
+### 成功运行输出
 ```
 ================================================================================
 黄金历史评估 Pipeline 测试
 ================================================================================
 
-📂 读取测试数据: data\dataset\golden_history_input.jsonl
+📂 读取测试数据: data/dataset/golden_history_input.jsonl
 ✓ 成功读取测试数据: key=001
   - 消息数量: 17
   - 规则数量: 12
 
-🔧 初始化评估器...
-⚠️  警告：未找到 API key
-   将使用 Mock 模式进行测试
+🔧 检查 API key...
+✓ 找到 API key: sk-xxxx...xxxx
 
-📝 创建 Mock evaluator...
-🚀 开始评估...
-✓ 临时输入文件: ...temp_test_input.json
-✓ 评估完成
-
-📊 评估结果:
-  - 生成的回复: 这是一个测试回复。请问您还有什么问题吗？...
-  - 总得分: -6
-
-  规则评估详情:
-    ✗ 违规 | single_turn:sty:formula | 得分: -1 | Mock 评估结果 for single_turn:sty:formula
-    ...
-
-✅ 测试成功！Pipeline 运行正常
-```
-
-### 真实 API 模式输出
-```
-================================================================================
-黄金历史评估 Pipeline 测试
-================================================================================
-
-📂 读取测试数据: ...
-✓ 找到 API key: sk-xxx...
+🚀 初始化评估器...
 ✓ 评估器初始化成功
+
 🚀 开始评估...
+✓ 临时输入文件: /path/to/temp_test_input.json
 ✓ 评估完成
 
 📊 评估结果:
-  - 生成的回复: 好的，建议您带孩子到专业的儿童医院进行...
+  - 生成的回复: 好的，建议您带孩子到专业的儿童医院进行详细检查...
   - 总得分: 3
 
   规则评估详情:
     ✓ 通过 | single_turn:sty:formula | 得分: 1 | 未使用客服套话
     ✓ 通过 | single_turn:ask:multi_question | 得分: 1 | 问题数量符合阈值
+    ✗ 违规 | single_turn:sty:gratitude | 得分: -1 | 使用了感谢用语
     ...
 
 ✅ 测试成功！Pipeline 运行正常
+   详细结果已保存到: /path/to/temp_test_output.json
+
+================================================================================
+✅ 测试完成：Pipeline 运行正常
+
+下一步：
+1. 批量评估：使用 evaluate_batch_from_json()
+2. 自定义规则：添加新的评估规则
+3. 调整配置：修改 models/model_configs.py
+================================================================================
 ```
 
 ## 🐛 故障排查
@@ -151,14 +136,28 @@ python test_golden_history_pipeline.py
 
 ### 问题 2：API key 未设置
 ```
-⚠️  警告：未找到 API key
+❌ 错误：未找到 API key
+   请设置环境变量：
+   - Linux/Mac: export DASHSCOPE_API_KEY='your-api-key'
+   - Windows: set DASHSCOPE_API_KEY=your-api-key
 ```
 
 **解决方法**：
 - 设置环境变量 `DASHSCOPE_API_KEY` 或 `OPENAI_API_KEY`
-- 或使用 Mock 模式进行测试
+- 重新运行脚本
 
-### 问题 3：模型加载失败
+### 问题 3：API 调用失败
+```
+❌ 评估失败: API connection error
+```
+
+**解决方法**：
+- 检查网络连接
+- 验证 API key 是否有效
+- 检查 API 配额是否用完
+- 查看 `models/model_configs.py` 中的 API 配置
+
+### 问题 4：模型加载失败
 ```
 ❌ 初始化评估器失败: ...
 ```
@@ -166,15 +165,32 @@ python test_golden_history_pipeline.py
 **解决方法**：
 - 检查依赖是否安装：`pip install -r requirements.txt`
 - 检查配置文件：`models/model_configs.py`
+- 查看详细错误堆栈信息
 
 ## 🎯 下一步
 
 测试通过后，你可以：
 
-1. **批量评估**：使用 `evaluate_batch_from_json()` 评估多个测试案例
+1. **批量评估**：使用 `evaluate_batch_from_json()` 评估整个 JSONL 文件
+   ```python
+   results = evaluator.evaluate_batch_from_json(
+       input_json_paths=["data/dataset/golden_history_input.jsonl"],
+       output_dir="data/output"
+   )
+   ```
+
 2. **自定义规则**：添加新的规则到规则注册表
+   - 修改 `rules/rule_mappings.py`
+   - 在 `rules/single_rules.py` 或 `rules/stage_rules.py` 中实现规则
+
 3. **调整配置**：修改 `models/model_configs.py` 中的配置
+   - 更换模型
+   - 调整 API 参数
+   - 修改超时设置
+
 4. **查看详细结果**：检查输出的 JSON 文件
+   - `temp_test_output.json` - 包含完整的评估结果
+   - 包括生成的回复、每条规则的评估结果、kwargs 等
 
 ## 📖 相关文档
 
