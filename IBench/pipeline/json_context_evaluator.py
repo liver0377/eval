@@ -359,21 +359,29 @@ class JsonContextEvaluator:
 
         assistant_idx = start_idx + 2 * resolved_N - 1
 
-        # 考虑最后一条单独的 user 消息（Golden History 评估场景）
-        # 如果最后一条是 user，说明有一轮未完成，应该计入 max_turns
-        if messages[-1].role == "user":
-            max_turns = (len(messages) - start_idx + 1) // 2
-        else:
-            max_turns = (len(messages) - start_idx) // 2
+        # 计算完整轮数（只计算已有 assistant 回复的轮次）
+        max_turns = (len(messages) - start_idx) // 2
 
         if assistant_idx >= len(messages):
-            print(f"⚠ 警告: 计算的 N={resolved_N} 超出范围（实际{max_turns}轮），跳过该规则")
-            return {
-                "triggered": False,
-                "score": 0,
-                "kwargs": {},
-                "reason": f"N={resolved_N} 超出范围，对话仅有{max_turns}轮"
-            }
+            # 区分两种情况
+            if assistant_idx == len(messages) and messages[-1].role == "user":
+                # 特殊情况：N指向即将生成的回复（Golden History 场景）
+                print(f"ℹ️  信息: 规则 N={resolved_N} 指向即将生成的回复，跳过该规则")
+                return {
+                    "triggered": False,
+                    "score": 0,
+                    "kwargs": {},
+                    "reason": f"规则 N={resolved_N} 指向即将生成的回复，历史中不存在"
+                }
+            else:
+                # 真正的超出范围
+                print(f"⚠ 警告: 计算的 N={resolved_N} 超出范围（实际{max_turns}轮），跳过该规则")
+                return {
+                    "triggered": False,
+                    "score": 0,
+                    "kwargs": {},
+                    "reason": f"N={resolved_N} 超出范围，对话仅有{max_turns}轮"
+                }
         
         target_message = messages[assistant_idx]
         
